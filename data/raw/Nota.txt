@@ -1,0 +1,20 @@
+Para empatar la base de datos de resultados con el cuestionario a padres de familia y cuestionario al estudiante,
+tener en cuenta lo siguiente:
+
+Llaves a utilizar:
+- ID_estudiante
+
+
+Para empatar la base de datos de resultados con el cuestionario de docentes, tener en cuenta lo siguiente:
+
+Llaves a utilizar:
+- cod_mod7
+- anexo
+- ID_seccion
+
+
+Para empatar la base de datos de resultados con el cuestionario de director, tener en cuenta lo siguiente:
+
+Llaves a utilizar:
+- cod_mod7
+- anexo
