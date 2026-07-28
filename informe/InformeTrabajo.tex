@@ -1,0 +1,289 @@
+\documentclass[11pt]{article}
+
+% ------------------------------------------------------------
+% Paquetes
+% ------------------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{setspace}
+\usepackage{enumitem}
+\usepackage[
+    a4paper,
+    margin=2.5cm
+]{geometry}
+\usepackage{hyperref}
+
+% ------------------------------------------------------------
+% Configuración general
+% ------------------------------------------------------------
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    citecolor=blue,
+    urlcolor=blue,
+    pdftitle={Trabajo de Aplicación},
+    pdfauthor={Maestría en Modelización Matemática y Computacional}
+}
+
+\setstretch{1.5}
+\setlist[itemize]{
+    leftmargin=*,
+    itemsep=2pt,
+    topsep=4pt
+}
+
+\begin{document}
+
+% ------------------------------------------------------------
+% Carátula
+% ------------------------------------------------------------
+\begin{titlepage}
+\centering
+
+{\bfseries\large
+Instituto de Matemática y Ciencias Afines -- IMCA
+\par}
+
+\vspace{0.1cm}
+
+{\scshape\large
+Maestría en Modelización Matemática y Computacional
+\par}
+
+\vspace{5.5cm}
+
+{\bfseries\large
+Trabajo de Aplicación del curso Modelamiento Estadístico Predictivo
+\par}
+
+\vspace{0.5cm}
+
+{\Large\color{blue}
+Título del trabajo
+\par}
+
+
+\vspace{1cm}
+
+
+\vfill
+
+{\large\bfseries Autor:\par}
+\vspace{0.3cm}
+{\large Nombre y apellidos\par}
+
+\vfill
+
+{\large\bfseries Profesor:\par}
+\vspace{0.3cm}
+{\large Alex de la Cruz H.\par}
+
+\vfill
+
+{\large Julio de 2026\par}
+
+\end{titlepage}
+
+% ------------------------------------------------------------
+% Indicaciones
+% ------------------------------------------------------------
+\section*{Indicaciones sobre el trabajo}
+
+El trabajo debe abordar un \textbf{problema de clasificación} mediante la
+aplicación y comparación de modelos.
+
+La base de datos seleccionada debe ser \textbf{diferente de las bases de datos
+utilizadas, desarrolladas o presentadas durante el curso}. Asimismo, debe ser
+pública y provenir de una fuente reconocida, como UCI Machine Learning
+Repository, Kaggle, INEI, organismos gubernamentales, repositorios académicos
+u otra fuente debidamente documentada.
+
+\section*{Extensión y estructura del informe}
+
+El informe debe tener una extensión máxima de \textbf{12 páginas}, sin
+considerar las referencias ni los anexos. Se recomienda distribuir el contenido
+de la siguiente manera:
+
+\begin{itemize}
+    \item Introducción: máximo 1 página.
+    \item Metodología: máximo 2 páginas.
+    \item Resultados y análisis: máximo 8 páginas.
+    \item Comentarios finales: máximo 1 página.
+    \item Referencias.
+    \item Anexos.
+\end{itemize}
+
+\section*{Indicaciones generales}
+
+\begin{itemize}
+    
+    \item No deben incluirse capturas de pantalla de resultados, de la consola
+    ni del código de \texttt{R}. Las tablas y figuras deben estar correctamente
+    editadas, numeradas, tituladas e interpretadas.
+
+    \item Si se utiliza R Markdown, deben ocultarse el código, los mensajes,
+    las advertencias y demás salidas que no sean necesarias para interpretar
+    los resultados.
+
+    \item El informe final debe entregarse en formato PDF. Además, se debe
+    adjuntar el archivo fuente utilizado para generarlo, ya sea
+    \LaTeX{} o R Markdown.
+
+    \item No se revisará como informe final únicamente el archivo fuente de
+    R Markdown o \LaTeX{} sin el correspondiente documento en formato PDF.
+
+    \item Se debe adjuntar la base de datos utilizada.
+
+    \item Se debe adjuntar en un archivo independiente todo el código en
+    \texttt{R} empleado.
+
+\end{itemize}
+
+\newpage
+
+% ------------------------------------------------------------
+% Índice
+% ------------------------------------------------------------
+\tableofcontents
+
+\newpage
+
+% ------------------------------------------------------------
+% Introducción
+% ------------------------------------------------------------
+\section{Introducción}
+
+En esta sección se debe presentar el problema de clasificación que será
+estudiado. El estudiante debe:
+
+\begin{itemize}
+    \item Contextualizar el problema y justificar la pertinencia del uso de modelos para su análisis.
+
+    \item Describir brevemente la base de datos. Identificar claramente las clases o categorías que se desean predecir, y describir brevemente  su procedencia y contexto.
+
+    \item Plantear el objetivo del análisis.
+
+    \item Explicar brevemente la relevancia práctica del problema abordado.
+\end{itemize}
+
+
+
+% ------------------------------------------------------------
+% Metodología
+% ------------------------------------------------------------
+\section{Metodología}
+
+En esta sección se deben describir los procedimientos metodológicos antes de
+presentar sus resultados. Se debe incluir:
+
+\begin{itemize}
+    \item La descripción de las técnicas exploratorias que se utilizarán para
+    estudiar la distribución de la variable respuesta, las variables
+    explicativas y sus relaciones.
+
+    \item Los criterios empleados para seleccionar las variables incluidas
+    en el análisis.
+
+    \item El tratamiento de datos faltantes, valores atípicos, categorías poco
+    frecuentes y posibles inconsistencias en la base de datos.
+
+
+    \item La estrategia utilizada para separar los datos en conjuntos de
+    entrenamiento y prueba.
+
+    \item Los modelos de clasificación que se ajustarán. Se debe presentar
+    una descripción breve de cada modelo y justificar su inclusión.
+
+    \item La estrategia de entrenamiento, validación cruzada y ajuste de
+    hiperparámetros.
+
+    \item Las métricas utilizadas para evaluar y comparar los modelos. 
+
+    \item El software, los paquetes estadísticos y las principales funciones
+    utilizadas.
+\end{itemize}
+
+
+% ------------------------------------------------------------
+% Resultados
+% ------------------------------------------------------------
+\section{Resultados}
+
+En esta sección se deben presentar, analizar e interpretar los principales
+resultados obtenidos. Se debe incluir:
+
+\begin{itemize}
+    \item Una descripción general de la base de datos, indicando el número de
+    observaciones, el número y tipo de variables, y la distribución de la variable respuesta.
+
+    \item Un análisis exploratorio breve y pertinente. Como referencia, se
+    puede incluir una tabla descriptiva general y un número reducido de  tablas o gráficos relevantes para el problema.
+
+    \item La descripción de los principales procedimientos de   preprocesamiento aplicados a los datos.
+
+    \item Los resultados del entrenamiento y de la validación de los modelos.
+
+    \item Los hiperparámetros seleccionados para cada modelo y el procedimiento
+    utilizado para elegirlos.
+
+    \item Una tabla comparativa que presente las métricas de desempeño de los
+    modelos bajo una misma estrategia de evaluación.
+
+    \item La identificación y justificación del modelo seleccionado.
+
+
+    \item La interpretación de los resultados en relación con el problema   planteado y no únicamente desde una perspectiva computacional.
+
+    \item Las principales limitaciones observadas en la capacidad predictiva
+    y de generalización del modelo.
+    
+\end{itemize}
+
+
+% ------------------------------------------------------------
+% Comentarios finales
+% ------------------------------------------------------------
+\section{Comentarios finales}
+
+En esta sección se debe:
+
+\begin{itemize}
+
+    \item Responder explícitamente al objetivo planteado en la introducción.
+
+    \item Comentar la utilidad del modelo seleccionado dentro del contexto
+    del problema.
+
+    \item Señalar las principales limitaciones de la base de datos, de los  modelos y del procedimiento de evaluación.
+
+    \item Proponer posibles extensiones o líneas futuras de análisis.
+\end{itemize}
+
+% ------------------------------------------------------------
+% Referencias
+% ------------------------------------------------------------
+\section*{Referencias}
+\addcontentsline{toc}{section}{Referencias}
+
+Se deben incluir las referencias de la base de datos, los métodos estadísticos,
+los paquetes computacionales y las fuentes bibliográficas utilizadas. Las
+referencias deben presentarse utilizando un formato uniforme.
+
+% ------------------------------------------------------------
+% Anexos
+% ------------------------------------------------------------
+\appendix
+\section{Anexos}
+
+Los anexos pueden contener resultados complementarios, tablas adicionales,
+gráficos secundarios, detalles técnicos o información necesaria para favorecer
+la reproducibilidad del análisis. No deben utilizarse para trasladar contenido
+esencial que corresponda al cuerpo principal del informe.
+
+\end{document}
+
