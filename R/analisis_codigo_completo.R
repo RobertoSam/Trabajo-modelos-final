@@ -1,0 +1,1145 @@
+# ============================================================
+# Codigo R completo del analisis de clasificacion
+# Prediccion de nivel Satisfactorio en Lectura y Matematica
+# EM 2024, 6to Primaria - MINEDU-UMC
+#
+# Extraido automaticamente (knitr::purl) de Exploracion_Analisis.Rmd,
+# que es la fuente de verdad de los resultados usados en InformeTrabajo.tex/pdf.
+#
+# Requiere: readxl, dplyr, tidyr, tibble, purrr, caret, glmnet, e1071,
+# kernlab, randomForest, pROC, ggplot2, scales, knitr, kableExtra, corrplot
+#
+# Rutas relativas esperadas: correr desde la carpeta informe/ del proyecto,
+# con los 3 archivos .xlsx en ../data/raw/
+# ============================================================
+
+#' ---
+#' title: "Exploración y desarrollo del análisis — EM 2024, 6to Primaria"
+#' subtitle: "Documento de trabajo: carga, limpieza, EDA y modelos (Lectura / Matemática)"
+#' author: "Equipo de trabajo"
+#' date: "`r format(Sys.Date(), '%d de %B de %Y')`"
+#' output:
+#'   html_document:
+#'     toc: true
+#'     toc_float: true
+#'     toc_depth: 4
+#'     number_sections: true
+#'     code_folding: show
+#'     theme: flatly
+#'     df_print: paged
+#' ---
+#' 
+#' <!--
+#' NOTA: Este documento es de TRABAJO / EXPLORACIÓN, no el informe final.
+#' Objetivo: dejar visible cada paso (carga, limpieza, EDA, modelo por modelo)
+#' para poder revisar, corregir y decidir qué entra al informe final.
+#' No contiene conclusiones ni interpretación normativa — solo la descripción
+#' de qué se hizo en cada bloque y qué arrojó como resultado.
+#' -->
+#' 
+## ----setup, include=FALSE-----------------------------------------------------
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.align = "center",
+  fig.width = 8,
+  fig.height = 5,
+  cache = TRUE,
+  cache.path = "cache_exploracion/",
+  autodep = TRUE
+)
+
+#' 
+#' # Librerías utilizadas
+#' 
+#' Se cargan todas las librerías necesarias para el flujo completo: lectura de
+#' Excel, manipulación de datos, entrenamiento/validación de modelos, y
+#' visualización.
+#' 
+## ----librerias, cache=FALSE---------------------------------------------------
+suppressPackageStartupMessages({
+  library(readxl)
+  library(dplyr)
+  library(tidyr)
+  library(tibble)
+  library(purrr)
+  library(stringr)
+  library(caret)
+  library(glmnet)
+  library(e1071)
+  library(kernlab)
+  library(randomForest)
+  library(pROC)
+  library(ggplot2)
+  library(scales)
+  library(knitr)
+  library(kableExtra)
+  library(corrplot)
+})
+set.seed(123)
+
+#' 
+#' \ 
+#' 
+#' # Carga de las tres bases de datos
+#' 
+#' En este bloque se cargan **las tres bases originales** tal como fueron
+#' entregadas: (1) la base de resultados EM con los niveles de logro, (2) el
+#' cuestionario aplicado al estudiante, y (3) el cuestionario aplicado a la
+#' familia. Para cada una se verifica primero si el archivo existe en la
+#' ruta esperada, se listan sus hojas, y se inspeccionan dimensiones y
+#' nombres de columnas — esto permite detectar de inmediato si una ruta está
+#' mal, si cambió el nombre de una hoja, o si el archivo no llegó a
+#' copiarse a `data/raw/`.
+#' 
+#' ## Base 1: Resultados EM (niveles de logro)
+#' 
+## ----carga-em-----------------------------------------------------------------
+ruta_em <- "../data/raw/EM_6P_2024_alumnos_innominados.xlsx"
+
+cat("¿Existe el archivo EM?:", file.exists(ruta_em), "\n")
+
+if (file.exists(ruta_em)) {
+  hojas_em <- excel_sheets(ruta_em)
+  cat("Hojas encontradas en EM:", paste(hojas_em, collapse = ", "), "\n")
+
+  bd_em <- read_excel(ruta_em, sheet = "BD")
+  cat("Dimensiones de la hoja BD:", paste(dim(bd_em), collapse = " x "), "\n")
+  cat("Nombres de columnas:\n")
+  print(names(bd_em))
+}
+
+#' 
+## ----carga-em-diccionario-----------------------------------------------------
+# Se imprime el diccionario de variables incluido en la propia base, ya
+# que documenta oficialmente qué significa cada columna (fuente: MINEDU-UMC).
+if (file.exists(ruta_em)) {
+  diccionario_em <- read_excel(ruta_em, sheet = "Diccionario de variables")
+  kable(diccionario_em, caption = "Diccionario de variables — hoja BD (EM 2024)") %>%
+    kable_styling(bootstrap_options = c("striped", "hover", "condensed"), font_size = 12)
+}
+
+#' 
+## ----carga-em-head------------------------------------------------------------
+# Primeras filas para inspección visual rápida de los valores reales
+if (file.exists(ruta_em)) {
+  head(bd_em, 5)
+}
+
+#' 
+#' ## Base 2: Cuestionario al estudiante
+#' 
+#' El archivo trae dos hojas: `base` (datos) y `diccionario` (pregunta,
+#' descriptor y categorías de cada ítem). Se inspecciona su estructura
+#' completa y se identifican, dentro de las ~198 columnas, las **26
+#' variables de tipo "índice compuesto"** (prefijo en mayúsculas
+#' `EST6P...`) — escalas ya construidas psicométricamente (tipo Rasch/TRI,
+#' estandarizadas con media ≈ 0), que se usarán como predictoras en lugar
+#' de los ~170 ítems crudos individuales.
+#' 
+## ----carga-estudiante---------------------------------------------------------
+ruta_estudiante <- "../data/raw/ENLA2024_6Pestudiante_EBRD1.xlsx"
+cat("¿Existe el archivo del cuestionario al estudiante?:", file.exists(ruta_estudiante), "\n")
+
+if (file.exists(ruta_estudiante)) {
+  hojas_estudiante <- excel_sheets(ruta_estudiante)
+  cat("Hojas encontradas:", paste(hojas_estudiante, collapse = ", "), "\n")
+
+  diccionario_est <- read_excel(ruta_estudiante, sheet = "diccionario")
+
+  # Se listan solo las variables compuestas (nombre en mayúsculas, es decir
+  # ya procesadas por UMC), que son las que se usarán como predictoras
+  vars_compuestas_est <- diccionario_est %>%
+    filter(variable == toupper(variable), nchar(variable) > 3,
+           variable != "ID_ESTUDIANTE") %>%
+    pull(variable)
+
+  cat("Variables compuestas identificadas en cuestionario estudiante (",
+      length(vars_compuestas_est), "):\n", sep = "")
+  print(vars_compuestas_est)
+
+  # Se carga la base completa, pero seleccionando SOLO el ID + las
+  # variables compuestas (no los ~170 ítems crudos), lo que además hace
+  # la carga mucho más liviana que traer las 198 columnas completas.
+  est_completo <- read_excel(ruta_estudiante, sheet = "base") %>%
+    select(ID_ESTUDIANTE, all_of(vars_compuestas_est))
+
+  cat("\nDimensiones (base completa, solo variables compuestas):",
+      paste(dim(est_completo), collapse = " x "), "\n")
+
+  cat("\nValores faltantes por variable compuesta:\n")
+  print(sapply(est_completo, function(x) sum(is.na(x))))
+}
+
+#' 
+#' **Diccionario completo — variables compuestas del cuestionario al estudiante**
+#' (tomado directamente de la hoja `diccionario` del archivo original):
+#' 
+## ----diccionario-estudiante-tabla---------------------------------------------
+if (file.exists(ruta_estudiante)) {
+  diccionario_est %>%
+    filter(variable %in% vars_compuestas_est) %>%
+    select(variable, Descriptor) %>%
+    kable(caption = "Diccionario — variables compuestas, cuestionario al estudiante") %>%
+    kable_styling(bootstrap_options = c("striped", "hover", "condensed"), font_size = 12)
+}
+
+#' 
+#' ## Base 3: Cuestionario a la familia
+#' 
+#' Mismo procedimiento: se identifican las **14 variables compuestas**
+#' (prefijo `FAM6P...`) del diccionario, y se carga solo esas columnas de la
+#' hoja `base`.
+#' 
+## ----carga-familia------------------------------------------------------------
+ruta_familia <- "../data/raw/ENLA2024_6Pfamilia_EBR.xlsx"
+cat("¿Existe el archivo del cuestionario a la familia?:", file.exists(ruta_familia), "\n")
+
+if (file.exists(ruta_familia)) {
+  hojas_familia <- excel_sheets(ruta_familia)
+  cat("Hojas encontradas:", paste(hojas_familia, collapse = ", "), "\n")
+
+  diccionario_fam <- read_excel(ruta_familia, sheet = "diccionario")
+
+  vars_compuestas_fam <- diccionario_fam %>%
+    filter(variable == toupper(variable), nchar(variable) > 3,
+           variable != "ID_ESTUDIANTE") %>%
+    pull(variable)
+
+  cat("Variables compuestas identificadas en cuestionario familia (",
+      length(vars_compuestas_fam), "):\n", sep = "")
+  print(vars_compuestas_fam)
+
+  fam_completo <- read_excel(ruta_familia, sheet = "base") %>%
+    select(ID_ESTUDIANTE, all_of(vars_compuestas_fam))
+
+  cat("\nDimensiones (base completa, solo variables compuestas):",
+      paste(dim(fam_completo), collapse = " x "), "\n")
+
+  cat("\nValores faltantes por variable compuesta:\n")
+  print(sapply(fam_completo, function(x) sum(is.na(x))))
+}
+
+#' 
+#' **Diccionario completo — variables compuestas del cuestionario a la familia**:
+#' 
+## ----diccionario-familia-tabla------------------------------------------------
+if (file.exists(ruta_familia)) {
+  diccionario_fam %>%
+    filter(variable %in% vars_compuestas_fam) %>%
+    select(variable, Descriptor) %>%
+    kable(caption = "Diccionario — variables compuestas, cuestionario a la familia") %>%
+    kable_styling(bootstrap_options = c("striped", "hover", "condensed"), font_size = 12)
+}
+
+#' 
+#' ## Llaves oficiales de cruce (según `Nota.txt` de la base de datos)
+#' 
+#' El archivo `Nota.txt` que acompaña la base de datos original especifica
+#' explícitamente las llaves de unión recomendadas por MINEDU-UMC:
+#' 
+#' - **Resultados (EM) ↔ Cuestionario a padres de familia y Cuestionario al
+#'   estudiante**: llave única `ID_estudiante`.
+#' - **Resultados (EM) ↔ Cuestionario a docentes**: llaves `cod_mod7` +
+#'   `anexo` + `ID_seccion` (archivo no disponible en este análisis).
+#' - **Resultados (EM) ↔ Cuestionario al director**: llaves `cod_mod7` +
+#'   `anexo` (archivo no disponible en este análisis).
+#' 
+#' Esto **confirma** que el cruce implementado en la sección siguiente
+#' (unión por `ID_estudiante`/`ID_ESTUDIANTE`) es el oficialmente indicado
+#' para estudiante y familia. Los cuestionarios de docentes y director
+#' quedan fuera del alcance de este trabajo por no contar con esos archivos.
+#' 
+#' ## Diagnóstico del cruce entre las tres bases
+#' 
+#' El identificador común es `ID_estudiante` (base EM) / `ID_ESTUDIANTE`
+#' (cuestionarios) — mismo campo, distinta capitalización. Antes de unir
+#' las bases se cuantifica cuántos estudiantes coinciden entre cada par y
+#' entre las tres a la vez, para decidir con evidencia (y no por defecto)
+#' qué tipo de unión usar.
+#' 
+## ----diagnostico-cruce--------------------------------------------------------
+em_ids <- bd_em %>% distinct(ID_estudiante) %>% pull(ID_estudiante)
+est_ids <- est_completo %>% distinct(ID_ESTUDIANTE) %>% pull(ID_ESTUDIANTE)
+fam_ids <- fam_completo %>% distinct(ID_ESTUDIANTE) %>% pull(ID_ESTUDIANTE)
+
+cat("Total EM:", length(em_ids), "\n")
+cat("Total cuestionario estudiante:", length(est_ids), "\n")
+cat("Total cuestionario familia:", length(fam_ids), "\n")
+cat("EM ∩ estudiante:", length(intersect(em_ids, est_ids)),
+    sprintf("(%.1f%% de EM)\n", 100*length(intersect(em_ids, est_ids))/length(em_ids)))
+cat("EM ∩ familia:", length(intersect(em_ids, fam_ids)),
+    sprintf("(%.1f%% de EM)\n", 100*length(intersect(em_ids, fam_ids))/length(em_ids)))
+cat("Las tres bases a la vez:", length(Reduce(intersect, list(em_ids, est_ids, fam_ids))),
+    sprintf("(%.1f%% de EM)\n", 100*length(Reduce(intersect, list(em_ids, est_ids, fam_ids)))/length(em_ids)))
+
+#' 
+#' **Decisión de unión adoptada**: se usa `left_join` desde la base EM
+#' (universo completo, 105,242 estudiantes) hacia estudiante y familia, en
+#' lugar de un `inner_join` de las tres (que reduciría el universo a
+#' ~91%). Esto evita descartar de entrada a los estudiantes cuyas familias
+#' no respondieron el cuestionario —una no-respuesta que podría no ser
+#' aleatoria— y en su lugar se documenta explícitamente con una variable
+#' indicadora de si el cuestionario fue respondido.
+#' 
+#' \newpage
+#' 
+#' # Selección y construcción del panel analítico (3 bases unidas)
+#' 
+#' ## Merge de las tres bases
+#' 
+## ----merge-tres-bases---------------------------------------------------------
+bd_em_std <- bd_em %>% rename(ID_ESTUDIANTE = ID_estudiante)
+
+bd_merged <- bd_em_std %>%
+  left_join(est_completo, by = "ID_ESTUDIANTE") %>%
+  left_join(fam_completo, by = "ID_ESTUDIANTE")
+
+cat("Dimensiones tras el merge (left_join desde EM):",
+    paste(dim(bd_merged), collapse = " x "), "\n")
+
+# Flags de respuesta a cada cuestionario (usando una variable compuesta
+# cualquiera de cada base como proxy: si es NA, es porque el estudiante
+# no tiene registro en esa base, es decir no respondió el cuestionario)
+bd_merged <- bd_merged %>%
+  mutate(
+    respondio_estudiante = !is.na(.data[[vars_compuestas_est[1]]]) | ID_ESTUDIANTE %in% est_ids,
+    respondio_familia    = ID_ESTUDIANTE %in% fam_ids
+  )
+
+cat("\nEstudiantes con cuestionario de estudiante respondido:",
+    sum(bd_merged$respondio_estudiante), "\n")
+cat("Estudiantes con cuestionario de familia respondido:",
+    sum(bd_merged$respondio_familia), "\n")
+
+#' 
+#' ## Selección final de variables predictoras
+#' 
+#' Se combinan tres grupos de predictores: (i) las 8 variables
+#' sociodemográficas de la base EM ya usadas en la primera versión del
+#' análisis, (ii) las 26 variables compuestas del cuestionario al
+#' estudiante, y (iii) las 14 variables compuestas del cuestionario a la
+#' familia. Se excluyen deliberadamente `medida500_L`/`medida500_M` por
+#' fuga de información.
+#' 
+## ----seleccion-variables------------------------------------------------------
+vars_sociodemo <- c("area", "gestion2", "caracteristica2", "sexo",
+                     "lengua_materna", "ise", "nse", "departamento")
+vars_predictoras <- c(vars_sociodemo, vars_compuestas_est, vars_compuestas_fam)
+
+cat("Total de variables predictoras candidatas:", length(vars_predictoras), "\n")
+cat(" - Sociodemográficas (EM):", length(vars_sociodemo), "\n")
+cat(" - Compuestas estudiante:", length(vars_compuestas_est), "\n")
+cat(" - Compuestas familia:", length(vars_compuestas_fam), "\n")
+
+cat("\nVariables EXCLUIDAS deliberadamente por fuga de información:\n")
+print(c("medida500_L", "medida500_M"))
+
+bd_sel <- bd_merged %>%
+  select(ID_estudiante = ID_ESTUDIANTE, all_of(vars_predictoras),
+         respondio_estudiante, respondio_familia, grupo_L, grupo_M)
+
+cat("\nDimensiones tras selección:", paste(dim(bd_sel), collapse=" x "), "\n")
+str(bd_sel)
+
+#' 
+#' ## Diccionario combinado y función de etiquetado legible
+#' 
+#' Para que los gráficos de importancia de variables (más adelante) sean
+#' interpretables sin tener que volver a los archivos originales, se
+#' construye un diccionario combinado (sociodemográficas de EM + compuestas
+#' de estudiante + compuestas de familia) y una función que traduce un
+#' nombre de variable codificado —incluyendo variantes con sufijo de
+#' categoría que generan los modelos con variables *dummy*, p. ej.
+#' `areaRural`— a su descripción legible, p. ej. "Área de la IE (Rural)".
+#' 
+## ----diccionario-combinado----------------------------------------------------
+diccionario_socio <- tibble(
+  variable = c("area", "gestion2", "caracteristica2", "sexo", "lengua_materna",
+               "ise", "nse", "departamento", "respondio_estudiante",
+               "respondio_familia", "ise_imputado"),
+  Descriptor = c("Área de la IE (urbana/rural)", "Gestión de la IE (pública/no estatal)",
+                 "Característica de la IE (polidocente/unidocente)", "Sexo del estudiante",
+                 "Lengua materna del estudiante", "Índice socioeconómico",
+                 "Nivel socioeconómico", "Departamento",
+                 "Respondió cuestionario del estudiante", "Respondió cuestionario de familia",
+                 "Indicador de imputación de ise")
+)
+
+diccionario_todo <- bind_rows(
+  diccionario_socio,
+  diccionario_est %>% select(variable, Descriptor) %>% filter(variable %in% vars_compuestas_est),
+  diccionario_fam %>% select(variable, Descriptor) %>% filter(variable %in% vars_compuestas_fam)
+) %>% arrange(desc(nchar(variable)))  # más largos primero, para que el matching de prefijo sea correcto
+
+etiquetar_variable <- function(nombre_codificado) {
+  # Encuentra el código de variable más largo que sea prefijo del nombre
+  # recibido (necesario porque los modelos con dummies generan nombres
+  # como "areaRural", "nseMuy Bajo", etc.)
+  idx <- which(startsWith(nombre_codificado, diccionario_todo$variable))
+  if (length(idx) == 0) return(nombre_codificado)
+  mejor <- diccionario_todo$variable[idx[1]]
+  sufijo <- sub(mejor, "", nombre_codificado, fixed = TRUE)
+  desc <- diccionario_todo$Descriptor[diccionario_todo$variable == mejor][1]
+  if (nchar(sufijo) > 0) paste0(desc, " [", sufijo, "]") else desc
+}
+
+cat("Diccionario combinado: ", nrow(diccionario_todo), " variables documentadas.\n")
+kable(diccionario_todo, caption = "Diccionario combinado de todas las variables predictoras") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), font_size = 11)
+
+#' 
+#' # Limpieza de datos — paso a paso
+#' 
+#' ## Diagnóstico de la variable `ise`
+#' 
+## ----diag-ise-----------------------------------------------------------------
+# Se inspecciona la clase de la variable antes de cualquier conversión
+cat("Clase original de 'ise':", class(bd_sel$ise), "\n")
+
+# Se listan los valores no numéricos presentes (si los hay)
+valores_no_numericos <- bd_sel$ise[!grepl("^-?[0-9]", bd_sel$ise)]
+cat("Valores no numéricos encontrados en 'ise':\n")
+print(table(valores_no_numericos))
+
+#' 
+#' ## Conversión de `ise` a numérico
+#' 
+## ----limpieza-ise-------------------------------------------------------------
+# Se recodifica el texto "#NULL!" como NA real, y se convierte la
+# columna completa de texto a numérico.
+bd_sel <- bd_sel %>%
+  mutate(
+    ise = na_if(ise, "#NULL!"),
+    ise = as.numeric(ise)
+  )
+
+cat("Clase de 'ise' después de la conversión:", class(bd_sel$ise), "\n")
+cat("Total de NA en 'ise' tras la conversión:", sum(is.na(bd_sel$ise)), "\n")
+cat("Resumen numérico de 'ise':\n")
+print(summary(bd_sel$ise))
+
+#' 
+#' ## Conversión de variables categóricas a factor
+#' 
+## ----conversion-factores------------------------------------------------------
+bd_sel <- bd_sel %>%
+  mutate(across(c(area, gestion2, caracteristica2, sexo, lengua_materna,
+                   nse, departamento, grupo_L, grupo_M), as.factor))
+
+cat("Estructura después de convertir a factor:\n")
+str(bd_sel)
+
+#' 
+#' ## Diagnóstico completo de valores faltantes (antes de imputar)
+#' 
+## ----diagnostico-na-----------------------------------------------------------
+faltantes <- sapply(bd_sel, function(x) sum(is.na(x)))
+faltantes_pct <- round(100 * faltantes / nrow(bd_sel), 2)
+
+tabla_faltantes <- data.frame(
+  Variable = names(faltantes),
+  N_faltantes = as.integer(faltantes),
+  Pct_faltantes = faltantes_pct
+) %>% arrange(desc(Pct_faltantes))
+
+kable(tabla_faltantes, caption = "Valores faltantes por variable, antes de imputar") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+#' 
+## ----diagnostico-na-conjunto--------------------------------------------------
+# Se verifica si el missing de 'ise' coincide con el de 'nse' (mismo
+# patrón de no respuesta del instrumento)
+coincidencia <- sum(is.na(bd_sel$ise) & is.na(bd_sel$nse))
+cat("Casos con 'ise' y 'nse' faltantes simultáneamente:", coincidencia, "\n")
+cat("Total de 'ise' faltantes:", sum(is.na(bd_sel$ise)), "\n")
+cat("Total de 'nse' faltantes:", sum(is.na(bd_sel$nse)), "\n")
+
+#' 
+#' ## Imputación de `ise` (mediana) y `nse` (moda)
+#' 
+## ----imputacion---------------------------------------------------------------
+moda_nse <- names(sort(table(bd_sel$nse), decreasing = TRUE))[1]
+mediana_ise <- median(bd_sel$ise, na.rm = TRUE)
+
+cat("Moda utilizada para 'nse':", moda_nse, "\n")
+cat("Mediana utilizada para 'ise':", round(mediana_ise, 4), "\n")
+
+bd_sel <- bd_sel %>%
+  mutate(
+    ise_imputado = is.na(ise),
+    ise = if_else(is.na(ise), mediana_ise, ise),
+    nse = if_else(is.na(nse), moda_nse, as.character(nse)) %>% as.factor(),
+    lengua_materna = if_else(is.na(lengua_materna), "Sin dato",
+                              as.character(lengua_materna)) %>% as.factor()
+  )
+
+cat("\nValores faltantes DESPUÉS de imputar (solo variables EM):\n")
+print(sapply(bd_sel, function(x) sum(is.na(x))))
+
+#' 
+#' ## Imputación de las 40 variables compuestas (estudiante + familia)
+#' 
+#' Estas variables son escalas continuas ya estandarizadas (media≈0). Al
+#' ser numéricas, se imputan todas con la **mediana propia de cada
+#' variable** mediante un `for` genérico, y se documenta cuánto se imputó
+#' en cada una. Adicionalmente, dado que gran parte del missing se explica
+#' por `respondio_estudiante`/`respondio_familia` = FALSE (no-respuesta
+#' completa al cuestionario), se conservan esos dos flags como predictores
+#' propios — permiten al modelo distinguir "no respondió el cuestionario"
+#' de "respondió pero con dato faltante puntual en un ítem".
+#' 
+## ----imputacion-compuestas----------------------------------------------------
+vars_numericas_compuestas <- c(vars_compuestas_est, vars_compuestas_fam)
+
+cat("Total de variables compuestas a imputar:", length(vars_numericas_compuestas), "\n")
+
+medianas_compuestas <- sapply(bd_sel[vars_numericas_compuestas], median, na.rm = TRUE)
+
+resumen_imputacion <- data.frame(
+  Variable = names(medianas_compuestas),
+  Mediana_usada = round(medianas_compuestas, 4),
+  N_faltantes = sapply(bd_sel[vars_numericas_compuestas], function(x) sum(is.na(x)))
+) %>% arrange(desc(N_faltantes))
+
+kable(resumen_imputacion, caption = "Mediana de imputación y N faltante por variable compuesta") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+for (v in vars_numericas_compuestas) {
+  mediana_v <- medianas_compuestas[[v]]
+  bd_sel[[v]] <- if_else(is.na(bd_sel[[v]]), mediana_v, bd_sel[[v]])
+}
+
+bd_sel <- bd_sel %>%
+  mutate(respondio_estudiante = factor(if_else(respondio_estudiante, "Si", "No")),
+         respondio_familia    = factor(if_else(respondio_familia, "Si", "No")))
+
+cat("\nValores faltantes en variables compuestas DESPUÉS de imputar:\n")
+print(sum(sapply(bd_sel[vars_numericas_compuestas], function(x) sum(is.na(x)))))
+
+cat("\nDistribución de los flags de respuesta a cuestionarios:\n")
+print(table(bd_sel$respondio_estudiante))
+print(table(bd_sel$respondio_familia))
+
+#' 
+#' ## Categorías poco frecuentes
+#' 
+## ----categorias-frecuentes----------------------------------------------------
+# Se revisa la frecuencia de cada categoría en las variables categóricas,
+# para decidir si alguna requiere agruparse en "Otros" por baja frecuencia
+vars_cat <- c("area", "gestion2", "caracteristica2", "sexo",
+              "lengua_materna", "nse", "departamento")
+
+for (v in vars_cat) {
+  cat("\n---", v, "---\n")
+  print(round(100 * prop.table(table(bd_sel[[v]])), 2))
+}
+
+#' 
+#' Se observa que `lengua_materna` tiene varias categorías con frecuencia
+#' menor al 1% ("Aimara", "No respondió", "Sin dato", "Otra lengua
+#' originaria"). Se documenta aquí, sin agruparlas todavía, para decidir en
+#' una siguiente iteración si conviene consolidarlas en una categoría
+#' "Otras lenguas".
+#' 
+#' \newpage
+#' 
+#' # Definición de las variables objetivo
+#' 
+#' ## Distribución original de niveles de logro (4 categorías)
+#' 
+## ----distribucion-original-targets--------------------------------------------
+cat("Distribución original de grupo_L (Lectura):\n")
+print(table(bd_sel$grupo_L, useNA = "ifany"))
+print(round(100*prop.table(table(bd_sel$grupo_L)), 2))
+
+cat("\nDistribución original de grupo_M (Matemática):\n")
+print(table(bd_sel$grupo_M, useNA = "ifany"))
+print(round(100*prop.table(table(bd_sel$grupo_M)), 2))
+
+#' 
+## ----grafico-niveles-originales, fig.cap="Distribución de los 4 niveles de logro originales"----
+niveles_l <- as.data.frame(table(bd_sel$grupo_L)) %>% mutate(Competencia = "Lectura")
+niveles_m <- as.data.frame(table(bd_sel$grupo_M)) %>% mutate(Competencia = "Matemática")
+
+bind_rows(niveles_l, niveles_m) %>%
+  rename(Nivel = Var1) %>%
+  mutate(Nivel = factor(Nivel, levels = c("Previo al Inicio", "En inicio",
+                                           "En proceso", "Satisfactorio"))) %>%
+  ggplot(aes(x = Nivel, y = Freq, fill = Competencia)) +
+  geom_col(position = "dodge") +
+  labs(x = "Nivel de logro", y = "Número de estudiantes",
+       title = "Distribución original (4 niveles), antes de binarizar") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 15, hjust = 1))
+
+#' 
+#' ## Exclusión de registros sin nivel de logro válido
+#' 
+## ----exclusion-na-target------------------------------------------------------
+n_antes <- nrow(bd_sel)
+bd_sel_completo <- bd_sel %>% filter(!is.na(grupo_L), !is.na(grupo_M))
+n_despues <- nrow(bd_sel_completo)
+
+cat("Registros antes de excluir NA en targets:", n_antes, "\n")
+cat("Registros después de excluir NA en targets:", n_despues, "\n")
+cat("Registros excluidos:", n_antes - n_despues, "\n")
+
+#' 
+#' ## Muestreo estratificado (viabilidad computacional)
+#' 
+## ----muestreo-----------------------------------------------------------------
+n_muestra <- 15000
+set.seed(123)
+idx_muestra <- createDataPartition(bd_sel_completo$grupo_L,
+                                    p = n_muestra / nrow(bd_sel_completo),
+                                    list = FALSE)
+bd_muestra <- bd_sel_completo[idx_muestra, ]
+
+cat("Universo disponible (con ambos targets válidos):", nrow(bd_sel_completo), "\n")
+cat("Tamaño de la submuestra de trabajo:", nrow(bd_muestra), "\n")
+
+# Se verifica que la submuestra mantenga proporciones similares al universo
+cat("\nProporciones grupo_L — universo completo:\n")
+print(round(100*prop.table(table(bd_sel_completo$grupo_L)), 2))
+cat("Proporciones grupo_L — submuestra:\n")
+print(round(100*prop.table(table(bd_muestra$grupo_L)), 2))
+
+#' 
+#' ## Construcción de las variables binarias
+#' 
+## ----construccion-target-binario----------------------------------------------
+datos <- bd_muestra %>%
+  mutate(
+    y_lectura    = factor(if_else(grupo_L == "Satisfactorio", "Sat", "No_sat"),
+                           levels = c("No_sat", "Sat")),
+    y_matematica = factor(if_else(grupo_M == "Satisfactorio", "Sat", "No_sat"),
+                           levels = c("No_sat", "Sat")),
+    ise_imputado = factor(if_else(ise_imputado, "Si", "No"))
+  ) %>%
+  select(-grupo_L, -grupo_M, -ID_estudiante) %>%
+  droplevels()
+
+cat("Distribución final y_lectura:\n"); print(table(datos$y_lectura))
+cat("Proporciones y_lectura:\n"); print(round(100*prop.table(table(datos$y_lectura)),2))
+
+cat("\nDistribución final y_matematica:\n"); print(table(datos$y_matematica))
+cat("Proporciones y_matematica:\n"); print(round(100*prop.table(table(datos$y_matematica)),2))
+
+#' 
+#' \newpage
+#' 
+#' # Análisis exploratorio de datos (EDA)
+#' 
+#' ## Variable numérica: `ise`
+#' 
+## ----eda-ise-resumen----------------------------------------------------------
+summary(datos$ise)
+sd(datos$ise)
+
+#' 
+## ----eda-ise-histograma, fig.cap="Distribución del índice socioeconómico (ise)"----
+ggplot(datos, aes(x = ise)) +
+  geom_histogram(bins = 40, fill = "steelblue", color = "white") +
+  labs(x = "Índice socioeconómico (ise)", y = "Frecuencia",
+       title = "Histograma de ise (submuestra, n=15,000)") +
+  theme_minimal()
+
+#' 
+## ----eda-ise-boxplot-lectura, fig.cap="ise según nivel alcanzado en Lectura"----
+ggplot(datos, aes(x = y_lectura, y = ise, fill = y_lectura)) +
+  geom_boxplot() +
+  labs(x = "Nivel alcanzado (Lectura)", y = "ise",
+       title = "Distribución de ise según y_lectura") +
+  theme_minimal() + theme(legend.position = "none")
+
+#' 
+## ----eda-ise-boxplot-matematica, fig.cap="ise según nivel alcanzado en Matemática"----
+ggplot(datos, aes(x = y_matematica, y = ise, fill = y_matematica)) +
+  geom_boxplot() +
+  labs(x = "Nivel alcanzado (Matemática)", y = "ise",
+       title = "Distribución de ise según y_matematica") +
+  theme_minimal() + theme(legend.position = "none")
+
+#' 
+#' ## Variables numéricas compuestas (estudiante y familia) — distribución y relación con el target
+#' 
+#' Se recorren las 40 variables compuestas (26 de estudiante + 14 de
+#' familia). Para cada una se muestra: (i) un histograma de su
+#' distribución, y (ii) un boxplot comparando su valor según el nivel
+#' alcanzado, para Lectura y Matemática. Esto permite ver, variable por
+#' variable, si el valor de la escala difiere visiblemente entre quienes
+#' alcanzan Satisfactorio y quienes no, antes de ajustar ningún modelo.
+#' 
+## ----eda-compuestas-loop, results='asis', fig.height=3.5----------------------
+vars_compuestas_todas <- c(vars_compuestas_est, vars_compuestas_fam)
+
+for (v in vars_compuestas_todas) {
+  cat("### `", v, "`\n\n", sep = "")
+
+  p1 <- ggplot(datos, aes(x = .data[[v]])) +
+    geom_histogram(bins = 30, fill = "slategray", color = "white") +
+    labs(x = v, y = "Frecuencia", title = paste("Distribución de", v)) +
+    theme_minimal()
+  print(p1)
+
+  datos_long <- datos %>%
+    select(all_of(v), y_lectura, y_matematica) %>%
+    pivot_longer(c(y_lectura, y_matematica), names_to = "Competencia", values_to = "Nivel") %>%
+    mutate(Competencia = if_else(Competencia == "y_lectura", "Lectura", "Matemática"))
+
+  p2 <- ggplot(datos_long, aes(x = Nivel, y = .data[[v]], fill = Nivel)) +
+    geom_boxplot() +
+    facet_wrap(~Competencia) +
+    labs(x = "Nivel alcanzado", y = v,
+         title = paste(v, "según nivel alcanzado")) +
+    theme_minimal() + theme(legend.position = "none")
+  print(p2)
+
+  cat("\n\n")
+}
+
+#' 
+#' ## Variables categóricas — distribución univariada
+#' 
+## ----eda-univariado-loop, results='asis', fig.height=4------------------------
+vars_cat_finales <- c("area", "gestion2", "caracteristica2", "sexo",
+                       "lengua_materna", "nse", "departamento", "ise_imputado",
+                       "respondio_estudiante", "respondio_familia")
+
+for (v in vars_cat_finales) {
+  cat("### Distribución de `", v, "`\n\n", sep = "")
+
+  tabla_v <- datos %>% count(.data[[v]]) %>% mutate(Pct = round(100*n/sum(n),1))
+  print(kable(tabla_v, caption = paste("Frecuencias de", v)))
+
+  p <- ggplot(datos, aes(x = .data[[v]])) +
+    geom_bar(fill = "darkorange") +
+    labs(x = v, y = "Frecuencia", title = paste("Distribución de", v)) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 30, hjust = 1))
+  print(p)
+  cat("\n\n")
+}
+
+#' 
+#' ## Variables categóricas vs. variable objetivo (bivariado)
+#' 
+#' Para cada variable predictora categórica se calcula la proporción de
+#' estudiantes que alcanza el nivel Satisfactorio, separado por Lectura y
+#' Matemática. Esto permite ver, variable por variable, si existe una
+#' asociación aparente con el resultado antes de ajustar ningún modelo.
+#' 
+## ----eda-bivariado-loop, results='asis', fig.height=4.5-----------------------
+for (v in vars_cat_finales) {
+  cat("### `", v, "` vs. variable objetivo\n\n", sep = "")
+
+  tabla_biv <- datos %>%
+    group_by(.data[[v]]) %>%
+    summarise(Prop_Sat_Lectura = mean(y_lectura == "Sat"),
+              Prop_Sat_Matematica = mean(y_matematica == "Sat"),
+              n = n(), .groups = "drop")
+
+  print(kable(tabla_biv, digits = 3,
+              caption = paste("Proporción Satisfactorio por", v)))
+
+  p <- tabla_biv %>%
+    pivot_longer(starts_with("Prop_Sat"), names_to = "Competencia", values_to = "Proporcion") %>%
+    mutate(Competencia = if_else(grepl("Lectura", Competencia), "Lectura", "Matemática")) %>%
+    ggplot(aes(x = .data[[v]], y = Proporcion, fill = Competencia)) +
+    geom_col(position = "dodge") +
+    scale_y_continuous(labels = percent) +
+    labs(x = v, y = "% Satisfactorio", title = paste("% Satisfactorio según", v)) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 30, hjust = 1))
+  print(p)
+  cat("\n\n")
+}
+
+#' 
+#' ## Relación entre variables predictoras (multicolinealidad aparente)
+#' 
+## ----eda-asociacion-categoricas, fig.cap="Test de independencia (Chi-cuadrado) entre pares de variables categóricas"----
+# Se calcula el p-valor de un test chi-cuadrado para cada par de variables
+# categóricas, como diagnóstico exploratorio de asociación entre predictores
+# (relevante para interpretar coeficientes de los modelos lineales más adelante)
+pares <- combn(vars_cat_finales[vars_cat_finales != "ise_imputado"], 2, simplify = FALSE)
+
+resultados_chi <- map_df(pares, function(par) {
+  tab <- table(datos[[par[1]]], datos[[par[2]]])
+  test <- suppressWarnings(chisq.test(tab))
+  tibble(Var1 = par[1], Var2 = par[2], p_valor = test$p.value)
+})
+
+kable(resultados_chi %>% arrange(p_valor), digits = 4,
+      caption = "P-valores de test Chi-cuadrado entre pares de variables categóricas")
+
+#' 
+#' \newpage
+#' 
+#' # Preprocesamiento previo al modelamiento
+#' 
+## ----preprocesamiento-explicacion---------------------------------------------
+# Se documenta la estructura final de "datos" que entra a los modelos
+cat("Estructura final antes de dividir en train/test:\n")
+str(datos)
+
+cat("\nNúmero de niveles por variable categórica (relevante para el número\n",
+    "de columnas dummy que generará glmnet/SVM internamente):\n")
+sapply(datos %>% select(where(is.factor)), nlevels)
+
+#' 
+#' # División entrenamiento / prueba
+#' 
+## ----train-test-split---------------------------------------------------------
+set.seed(123)
+idx_lectura <- createDataPartition(datos$y_lectura, p = 0.7, list = FALSE)
+train_lectura <- datos[idx_lectura, ]
+test_lectura  <- datos[-idx_lectura, ]
+
+set.seed(123)
+idx_mate <- createDataPartition(datos$y_matematica, p = 0.7, list = FALSE)
+train_mate <- datos[idx_mate, ]
+test_mate  <- datos[-idx_mate, ]
+
+cat("Lectura — train:", nrow(train_lectura), " / test:", nrow(test_lectura), "\n")
+cat("Matemática — train:", nrow(train_mate), " / test:", nrow(test_mate), "\n")
+
+cat("\nVerificación de que el split mantuvo las proporciones (Lectura):\n")
+print(round(100*prop.table(table(train_lectura$y_lectura)),2))
+print(round(100*prop.table(table(test_lectura$y_lectura)),2))
+
+#' 
+#' # Entrenamiento de los 7 modelos
+#' 
+#' Se define una función común de entrenamiento (misma especificación para
+#' Lectura y Matemática), con validación cruzada de 5 folds y selección de
+#' hiperparámetros por AUC-ROC.
+#' 
+## ----funcion-entrenamiento----------------------------------------------------
+entrenar_modelos <- function(train_data, target_var, semilla = 123) {
+  ctrl <- trainControl(method = "cv", number = 5,
+                        classProbs = TRUE, summaryFunction = twoClassSummary,
+                        savePredictions = "final")
+  formula_modelo <- as.formula(paste(target_var, "~ ."))
+  otros_target <- setdiff(c("y_lectura", "y_matematica"), target_var)
+  train_data <- train_data %>% select(-all_of(otros_target))
+
+  set.seed(semilla)
+  m_logit <- train(formula_modelo, data = train_data, method = "glm",
+                    family = binomial(link = "logit"), trControl = ctrl, metric = "ROC")
+  set.seed(semilla)
+  m_probit <- train(formula_modelo, data = train_data, method = "glm",
+                     family = binomial(link = "probit"), trControl = ctrl, metric = "ROC")
+  set.seed(semilla)
+  m_lasso <- train(formula_modelo, data = train_data, method = "glmnet", trControl = ctrl,
+                    metric = "ROC",
+                    tuneGrid = expand.grid(alpha = 1, lambda = 10^seq(-4, 0, length = 20)))
+  set.seed(semilla)
+  m_ridge <- train(formula_modelo, data = train_data, method = "glmnet", trControl = ctrl,
+                    metric = "ROC",
+                    tuneGrid = expand.grid(alpha = 0, lambda = 10^seq(-4, 0, length = 20)))
+  set.seed(semilla)
+  m_elastic <- train(formula_modelo, data = train_data, method = "glmnet", trControl = ctrl,
+                      metric = "ROC",
+                      tuneGrid = expand.grid(alpha = seq(0.1, 0.9, by = 0.2),
+                                             lambda = 10^seq(-4, 0, length = 10)))
+  set.seed(semilla)
+  m_svm <- train(formula_modelo, data = train_data, method = "svmRadial", trControl = ctrl,
+                  metric = "ROC", tuneLength = 5, preProcess = c("center", "scale"))
+  set.seed(semilla)
+  m_rf <- train(formula_modelo, data = train_data, method = "rf", trControl = ctrl,
+                metric = "ROC", tuneLength = 4, ntree = 300)
+
+  list(logit = m_logit, probit = m_probit, lasso = m_lasso, ridge = m_ridge,
+       elastic = m_elastic, svm = m_svm, rf = m_rf)
+}
+
+#' 
+## ----entrenar-lectura, cache=TRUE---------------------------------------------
+# Se entrenan los 7 modelos para la variable y_lectura.
+# Este bloque es el que más tiempo de cómputo consume (SVM y Random
+# Forest con validación cruzada de 5 folds sobre ~10,500 observaciones).
+modelos_lectura <- entrenar_modelos(train_lectura, "y_lectura")
+cat("Entrenamiento de los 7 modelos para Lectura: completado.\n")
+
+#' 
+## ----entrenar-matematica, cache=TRUE------------------------------------------
+# Misma función, aplicada de forma independiente a y_matematica
+modelos_matematica <- entrenar_modelos(train_mate, "y_matematica")
+cat("Entrenamiento de los 7 modelos para Matemática: completado.\n")
+
+#' 
+#' # Diagnóstico modelo por modelo
+#' 
+#' Para cada uno de los 7 modelos y cada variable objetivo se muestra: (i)
+#' el resumen del proceso de tuning de hiperparámetros vía validación
+#' cruzada, (ii) el gráfico de la curva de tuning cuando aplica, (iii)
+#' coeficientes o importancia de variables según corresponda, y (iv) la
+#' matriz de confusión y curva ROC sobre el conjunto de prueba. Esto permite
+#' revisar el comportamiento individual de cada algoritmo antes de
+#' compararlos entre sí.
+#' 
+## ----funcion-diagnostico------------------------------------------------------
+diagnosticar_modelo <- function(modelo, nombre, test_data, target_var) {
+
+  cat("#### Modelo:", nombre, "\n\n")
+
+  cat("**Resumen de validación cruzada (tuning):**\n\n")
+  print(modelo)
+
+  # Gráfico de tuning: no aplica de forma informativa para logit/probit
+  # (no tienen hiperparámetro libre), se muestra para el resto
+  if (!(nombre %in% c("logit", "probit"))) {
+    print(plot(modelo))
+  }
+
+  # Coeficientes para modelos lineales/regularizados
+  if (nombre %in% c("logit", "probit")) {
+    cat("\n**Coeficientes estimados:**\n\n")
+    print(summary(modelo$finalModel)$coefficients)
+  }
+  if (nombre %in% c("lasso", "ridge", "elastic")) {
+    cat("\n**Coeficientes en el lambda óptimo (no-cero):**\n\n")
+    coefs <- coef(modelo$finalModel, s = modelo$bestTune$lambda)
+    coefs_df <- as.data.frame(as.matrix(coefs)) %>%
+      rownames_to_column("Variable") %>%
+      rename(Coeficiente = 2) %>%
+      filter(Coeficiente != 0) %>%
+      arrange(desc(abs(Coeficiente)))
+    print(kable(coefs_df, digits = 4))
+  }
+
+  # Importancia de variables (disponible para todos vía caret::varImp)
+  cat("\n**Importancia de variables (top 10):**\n\n")
+  imp <- tryCatch({
+    varImp(modelo)$importance %>%
+      rownames_to_column("Variable") %>%
+      arrange(desc(Overall)) %>%
+      head(10) %>%
+      mutate(Descripcion = sapply(Variable, etiquetar_variable)) %>%
+      select(Variable, Descripcion, Overall)
+  }, error = function(e) NULL)
+  if (!is.null(imp)) print(kable(imp, digits = 2))
+
+  # Predicciones sobre el conjunto de prueba
+  pred_clase <- predict(modelo, newdata = test_data)
+  # Se usa [[ "Sat" ]] en vez de [, "Sat"] porque algunos modelos (p.ej.
+  # svmRadial vía kernlab) devuelven un tibble en lugar de un data.frame
+  # base; con tibbles, `[, "Sat"]` NO reduce a vector (a diferencia de un
+  # data.frame base), lo que rompe pROC::roc() más abajo. `[[ ]]` sí
+  # garantiza un vector en ambos casos.
+  pred_prob  <- as.numeric(predict(modelo, newdata = test_data, type = "prob")[["Sat"]])
+
+  cat("\n**Matriz de confusión (conjunto de prueba):**\n\n")
+  cm <- confusionMatrix(pred_clase, test_data[[target_var]], positive = "Sat")
+  print(cm$table)
+  print(kable(as.data.frame(t(cm$byClass)), digits = 3))
+
+  cat("\n**Curva ROC (conjunto de prueba):**\n\n")
+  roc_obj <- tryCatch({
+    roc(response = test_data[[target_var]], predictor = pred_prob,
+        levels = c("No_sat", "Sat"), quiet = TRUE)
+  }, error = function(e) {
+    cat("**No se pudo calcular la curva ROC para este modelo.**",
+        "Motivo:", conditionMessage(e), "\n\n")
+    NULL
+  })
+
+  if (!is.null(roc_obj)) {
+    plot(roc_obj, main = paste("ROC —", nombre, "— AUC =", round(auc(roc_obj), 3)))
+  }
+
+  cat("\n\n---\n\n")
+
+  invisible(list(pred_clase = pred_clase, pred_prob = pred_prob,
+                  cm = cm, roc = roc_obj))
+}
+
+#' 
+#' ## Lectura — diagnóstico por modelo
+#' 
+## ----diagnostico-lectura, results='asis', fig.height=5------------------------
+diag_lectura <- imap(modelos_lectura, function(m, nombre) {
+  diagnosticar_modelo(m, nombre, test_lectura, "y_lectura")
+})
+
+#' 
+#' ## Matemática — diagnóstico por modelo
+#' 
+## ----diagnostico-matematica, results='asis', fig.height=5---------------------
+diag_matematica <- imap(modelos_matematica, function(m, nombre) {
+  diagnosticar_modelo(m, nombre, test_mate, "y_matematica")
+})
+
+#' 
+#' \newpage
+#' 
+#' # Comparación entre modelos
+#' 
+#' ## Tabla comparativa de métricas — Lectura
+#' 
+## ----comparacion-tabla-lectura------------------------------------------------
+tabla_comp_lectura <- imap_dfr(diag_lectura, function(d, nombre) {
+  tibble(Modelo = nombre,
+         Accuracy = as.numeric(d$cm$overall["Accuracy"]),
+         Sensibilidad = as.numeric(d$cm$byClass["Sensitivity"]),
+         Especificidad = as.numeric(d$cm$byClass["Specificity"]),
+         F1 = as.numeric(d$cm$byClass["F1"]),
+         AUC = if (is.null(d$roc)) NA_real_ else as.numeric(auc(d$roc)))
+}) %>% arrange(desc(AUC))
+
+kable(tabla_comp_lectura, digits = 3, caption = "Comparación de modelos — Lectura")
+
+#' 
+#' ## Tabla comparativa de métricas — Matemática
+#' 
+## ----comparacion-tabla-matematica---------------------------------------------
+tabla_comp_matematica <- imap_dfr(diag_matematica, function(d, nombre) {
+  tibble(Modelo = nombre,
+         Accuracy = as.numeric(d$cm$overall["Accuracy"]),
+         Sensibilidad = as.numeric(d$cm$byClass["Sensitivity"]),
+         Especificidad = as.numeric(d$cm$byClass["Specificity"]),
+         F1 = as.numeric(d$cm$byClass["F1"]),
+         AUC = if (is.null(d$roc)) NA_real_ else as.numeric(auc(d$roc)))
+}) %>% arrange(desc(AUC))
+
+kable(tabla_comp_matematica, digits = 3, caption = "Comparación de modelos — Matemática")
+
+#' 
+#' ## Gráfico comparativo de AUC (ambos targets)
+#' 
+## ----comparacion-auc-plot, fig.cap="AUC por modelo, Lectura vs Matemática"----
+bind_rows(
+  tabla_comp_lectura %>% mutate(Competencia = "Lectura"),
+  tabla_comp_matematica %>% mutate(Competencia = "Matemática")
+) %>%
+  filter(!is.na(AUC)) %>%
+  ggplot(aes(x = reorder(Modelo, AUC), y = AUC, fill = Competencia)) +
+  geom_col(position = "dodge") +
+  coord_flip() +
+  labs(x = "Modelo", y = "AUC (conjunto de prueba)",
+       title = "Comparación de AUC entre los 7 modelos",
+       caption = "Nota: modelos sin curva ROC calculable (p. ej. predicciones degeneradas) se omiten de este gráfico.") +
+  theme_minimal()
+
+#' 
+#' ## Curvas ROC superpuestas — Lectura
+#' 
+## ----roc-superpuestas-lectura, fig.cap="Curvas ROC de los modelos con ROC disponible — Lectura"----
+diag_lectura_roc <- diag_lectura[!sapply(diag_lectura, function(d) is.null(d$roc))]
+
+if (length(diag_lectura_roc) == 0) {
+  cat("Ningún modelo tuvo una curva ROC calculable para Lectura.\n")
+} else {
+  colores <- rainbow(length(diag_lectura_roc))
+  plot(diag_lectura_roc[[1]]$roc, col = colores[1], main = "Curvas ROC — Lectura")
+  if (length(diag_lectura_roc) > 1) {
+    for (i in 2:length(diag_lectura_roc)) {
+      plot(diag_lectura_roc[[i]]$roc, col = colores[i], add = TRUE)
+    }
+  }
+  legend("bottomright", legend = names(diag_lectura_roc), col = colores, lwd = 2, cex = 0.8)
+}
+
+modelos_sin_roc_lectura <- setdiff(names(diag_lectura), names(diag_lectura_roc))
+if (length(modelos_sin_roc_lectura) > 0) {
+  cat("Modelos EXCLUIDOS de este gráfico por no tener ROC calculable:",
+      paste(modelos_sin_roc_lectura, collapse = ", "), "\n")
+}
+
+#' 
+#' ## Curvas ROC superpuestas — Matemática
+#' 
+## ----roc-superpuestas-matematica, fig.cap="Curvas ROC de los modelos con ROC disponible — Matemática"----
+diag_matematica_roc <- diag_matematica[!sapply(diag_matematica, function(d) is.null(d$roc))]
+
+if (length(diag_matematica_roc) == 0) {
+  cat("Ningún modelo tuvo una curva ROC calculable para Matemática.\n")
+} else {
+  colores <- rainbow(length(diag_matematica_roc))
+  plot(diag_matematica_roc[[1]]$roc, col = colores[1], main = "Curvas ROC — Matemática")
+  if (length(diag_matematica_roc) > 1) {
+    for (i in 2:length(diag_matematica_roc)) {
+      plot(diag_matematica_roc[[i]]$roc, col = colores[i], add = TRUE)
+    }
+  }
+  legend("bottomright", legend = names(diag_matematica_roc), col = colores, lwd = 2, cex = 0.8)
+}
+
+modelos_sin_roc_matematica <- setdiff(names(diag_matematica), names(diag_matematica_roc))
+if (length(modelos_sin_roc_matematica) > 0) {
+  cat("Modelos EXCLUIDOS de este gráfico por no tener ROC calculable:",
+      paste(modelos_sin_roc_matematica, collapse = ", "), "\n")
+}
+
+#' 
+#' ## Comparación de importancia de variables entre modelos — Lectura
+#' 
+## ----comparacion-importancia-lectura, fig.height=7, fig.cap="Importancia de variables por modelo — Lectura"----
+imp_todos_lectura <- imap_dfr(modelos_lectura, function(m, nombre) {
+  tryCatch({
+    varImp(m)$importance %>%
+      rownames_to_column("Variable") %>%
+      mutate(Modelo = nombre)
+  }, error = function(e) NULL)
+})
+
+imp_todos_lectura %>%
+  mutate(Variable_legible = sapply(Variable, etiquetar_variable)) %>%
+  group_by(Modelo) %>%
+  slice_max(Overall, n = 8) %>%
+  ungroup() %>%
+  ggplot(aes(x = reorder(Variable_legible, Overall), y = Overall)) +
+  geom_col(fill = "seagreen") +
+  coord_flip() +
+  facet_wrap(~Modelo, scales = "free_y", ncol = 2) +
+  labs(x = NULL, y = "Importancia relativa",
+       title = "Top variables por modelo — Lectura") +
+  theme_minimal(base_size = 8)
+
+#' 
+#' ## Comparación de importancia de variables entre modelos — Matemática
+#' 
+## ----comparacion-importancia-matematica, fig.height=7, fig.cap="Importancia de variables por modelo — Matemática"----
+imp_todos_matematica <- imap_dfr(modelos_matematica, function(m, nombre) {
+  tryCatch({
+    varImp(m)$importance %>%
+      rownames_to_column("Variable") %>%
+      mutate(Modelo = nombre)
+  }, error = function(e) NULL)
+})
+
+imp_todos_matematica %>%
+  mutate(Variable_legible = sapply(Variable, etiquetar_variable)) %>%
+  group_by(Modelo) %>%
+  slice_max(Overall, n = 8) %>%
+  ungroup() %>%
+  ggplot(aes(x = reorder(Variable_legible, Overall), y = Overall)) +
+  geom_col(fill = "darkorchid") +
+  coord_flip() +
+  facet_wrap(~Modelo, scales = "free_y", ncol = 2) +
+  labs(x = NULL, y = "Importancia relativa",
+       title = "Top variables por modelo — Matemática") +
+  theme_minimal(base_size = 8)
+
+#' 
+#' ## Hiperparámetros finales seleccionados (ambos targets)
+#' 
+## ----hiperparametros-finales--------------------------------------------------
+hp_lectura <- map_df(modelos_lectura, ~ as.data.frame(.x$bestTune), .id = "Modelo")
+hp_matematica <- map_df(modelos_matematica, ~ as.data.frame(.x$bestTune), .id = "Modelo")
+
+cat("Hiperparámetros — Lectura:\n")
+kable(hp_lectura, digits = 4)
+
+cat("\nHiperparámetros — Matemática:\n")
+kable(hp_matematica, digits = 4)
+
+#' 
+#' ---
+#' 
+#' *Fin del documento de exploración. Este archivo se actualizará a medida
+#' que se incorporen las bases de estudiante y familia, y a medida que se
+#' revisen/corrijan decisiones de limpieza y modelado.*
