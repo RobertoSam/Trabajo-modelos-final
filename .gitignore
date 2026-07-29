@@ -6,3 +6,5 @@ renv/library/
 renv/staging/
 .DS_Store
 *.log
+informe/cache/
+informe/cache_exploracion/
