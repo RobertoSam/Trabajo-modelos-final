@@ -114,6 +114,46 @@ h4{font-size:15px;font-weight:600;margin:16px 0 4px;color:var(--accent)}
 .formulario h4{font-size:16px;margin-top:20px}
 .tips li{margin:6px 0}
 .mjx-wide{display:inline-block;max-width:100%;overflow-x:auto;overflow-y:hidden;vertical-align:middle;padding-bottom:2px}
+
+/* Menú lateral: fijo a la izquierda en pantallas anchas; panel deslizable en pantallas estrechas */
+.side{position:fixed;top:0;left:0;bottom:0;width:min(300px,86vw);background:var(--paper);border-right:1px solid var(--line);
+  transform:translateX(-105%);visibility:hidden;transition:transform .22s ease,visibility .22s;z-index:50;overflow-y:auto;
+  padding:calc(18px + env(safe-area-inset-top,0px)) 16px calc(20px + env(safe-area-inset-bottom,0px));
+  display:flex;flex-direction:column;gap:18px;font-size:14px}
+body.side-open .side{transform:none;visibility:visible}
+.side-bd{position:fixed;inset:0;background:rgba(10,14,22,.45);z-index:40}
+.side-btn{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:45;
+  font:600 14px var(--f-body);letter-spacing:.02em;padding:11px 18px;border-radius:999px;border:none;cursor:pointer;
+  background:var(--ink);color:var(--paper);box-shadow:0 6px 18px rgba(10,14,22,.25)}
+.side-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.side a{color:var(--ink);text-decoration:none}
+.side a:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.side-top{font-family:var(--f-display);font-weight:600;font-size:17px;line-height:1.25}
+.side-h{display:block;font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+.side-h a{color:var(--muted)}
+.side-h a:hover{color:var(--accent)}
+.side-t{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px}
+.side-t a{display:flex;gap:10px;align-items:baseline;padding:4px 8px;border-left:2px solid transparent;line-height:1.35}
+.side-t a:hover{background:var(--bg)}
+.side-t .k{font-family:var(--f-mono);font-size:11px;color:var(--muted);min-width:24px}
+.side-chips{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.side-chips a{font-family:var(--f-mono);font-size:12.5px;text-align:center;padding:5px 0;border:1px solid var(--line);background:var(--paper);font-variant-numeric:tabular-nums}
+.side-chips a:hover{border-color:var(--accent);color:var(--accent)}
+.side a.on{color:var(--accent);font-weight:600}
+.side-t a.on{border-left-color:var(--accent);background:var(--idea)}
+.side-t a.on .k{color:var(--accent)}
+.side-chips a.on{background:var(--accent);border-color:var(--accent);color:var(--paper)}
+.side-h a.on{color:var(--accent)}
+article.ex,section.part,header{scroll-margin-top:16px}
+@media (min-width:1100px){
+  .layout{display:grid;grid-template-columns:250px minmax(0,820px);gap:40px;justify-content:center;padding-inline:20px}
+  .layout>.wrap{margin:0;padding-inline:0;min-width:0}
+  .side{position:sticky;top:env(safe-area-inset-top,0px);height:100vh;width:auto;transform:none;visibility:visible;
+    border-right:none;background:transparent;padding:28px 4px 28px 0;z-index:auto;transition:none}
+  .side-btn,.side-bd{display:none!important}
+  nav.idx{display:none}
+}
+@media (prefers-reduced-motion: reduce){.side{transition:none}}
 p{margin:6px 0}
 .m{overflow-x:auto;overflow-y:hidden;max-width:100%}
 mjx-container[display="true"]{overflow-x:auto;overflow-y:hidden;max-width:100%;padding:2px 0}
@@ -129,6 +169,16 @@ html{scroll-behavior:smooth}
 </head>
 <body>
 
+<div class="layout" id="top">
+<aside class="side" id="side" aria-label="Índice">
+<a class="side-top" href="#top">Solucionario · Regresión y Ridge</a>
+<div class="side-sec"><span class="side-h"><a href="#teoria">Teoría</a></span><ol class="side-t"><li><a href="#t1"><span class="k">T1</span>Modelo y costo</a></li><li><a href="#t2"><span class="k">T2</span>Cálculo matricial</a></li><li><a href="#t3"><span class="k">T3</span>Ecuaciones normales</a></li><li><a href="#t4"><span class="k">T4</span>Convexidad y unicidad</a></li><li><a href="#t5"><span class="k">T5</span>Proyección ortogonal</a></li><li><a href="#t6"><span class="k">T6</span>Caso singular</a></li><li><a href="#t7"><span class="k">T7</span>Transformaciones</a></li><li><a href="#t8"><span class="k">T8</span>Descenso del gradiente</a></li><li><a href="#t9"><span class="k">T9</span>Regresión polinomial</a></li><li><a href="#t10"><span class="k">T10</span>Estandarización</a></li><li><a href="#t11"><span class="k">T11</span>Ridge</a></li><li><a href="#t12"><span class="k">T12</span>Sesgo y varianza</a></li><li><a href="#formulario"><span class="k">F</span>Formulario</a></li></ol></div>
+<div class="side-sec"><span class="side-h"><a href="#parte1">Parte I · Lineal múltiple</a></span><div class="side-chips"><a href="#a1">1</a><a href="#a2">2</a><a href="#a3">3</a><a href="#a4">4</a><a href="#a5">5</a><a href="#a6">6</a><a href="#a7">7</a><a href="#a8">8</a><a href="#a9">9</a><a href="#a10">10</a><a href="#a11">11</a><a href="#a12">12</a><a href="#a13">13</a><a href="#a14">14</a><a href="#a15">15</a></div></div>
+<div class="side-sec"><span class="side-h"><a href="#parte2">Parte II · Polinomial y Ridge</a></span><div class="side-chips"><a href="#b1">1</a><a href="#b2">2</a><a href="#b3">3</a><a href="#b4">4</a><a href="#b5">5</a><a href="#b6">6</a><a href="#b7">7</a><a href="#b8">8</a><a href="#b9">9</a><a href="#b10">10</a><a href="#b11">11</a><a href="#b12">12</a><a href="#b13">13</a><a href="#b14">14</a><a href="#b15">15</a></div></div>
+<div class="side-sec"><span class="side-h"><a href="#glosario">Glosario</a></span></div>
+</aside>
+<div class="side-bd" id="sideBd" hidden></div>
+<button type="button" class="side-btn" id="sideBtn" aria-controls="side" aria-expanded="false">Índice</button>
 <div class="wrap">
 <header>
   <h1>Solucionario: regresión lineal múltiple, polinomial y Ridge</h1>
@@ -1232,5 +1282,42 @@ $$\hat\beta_4=\frac{(16,-4)}{4+4}=(2,\,-0.5)\;\Rightarrow\;b_1=\tfrac21=2,\;b_2=
 
 <footer>Verificación: cada resultado numérico se recalculó con aritmética racional exacta (SymPy) antes de redactarlo.</footer>
 </div>
+</div>
+
+<script>
+(function(){
+  var side=document.getElementById('side'), btn=document.getElementById('sideBtn'), bd=document.getElementById('sideBd');
+  if(!side||!btn||!bd) return;
+  function setOpen(o){ document.body.classList.toggle('side-open',o); btn.setAttribute('aria-expanded',o?'true':'false'); bd.hidden=!o; }
+  btn.addEventListener('click',function(){ setOpen(!document.body.classList.contains('side-open')); });
+  bd.addEventListener('click',function(){ setOpen(false); });
+  side.addEventListener('click',function(e){ if(e.target.closest('a')) setOpen(false); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') setOpen(false); });
+  var links={}; side.querySelectorAll('a[href^="#"]').forEach(function(a){ links[a.getAttribute('href').slice(1)]=a; });
+  var targets=[]; Object.keys(links).forEach(function(id){ var el=document.getElementById(id); if(el && el.tagName==='ARTICLE') targets.push(el); });
+  var groups={a:'parte1',b:'parte2',t:'teoria',f:'teoria'};
+  var current=null;
+  function mark(id){
+    if(id===current) return; current=id;
+    side.querySelectorAll('a.on').forEach(function(x){ x.classList.remove('on'); });
+    var a=links[id]; if(!a) return; a.classList.add('on');
+    var g=id==='glosario'?'glosario':groups[id.charAt(0)]; if(g&&links[g]&&g!==id) links[g].classList.add('on');
+    if(window.innerWidth>=1100){
+      var sb=side.getBoundingClientRect(), r=a.getBoundingClientRect();
+      if(r.top<sb.top+40||r.bottom>sb.bottom-40) side.scrollTop+=r.top-sb.top-sb.height/2;
+    }
+  }
+  if('IntersectionObserver' in window){
+    var glos=document.getElementById('glosario'); if(glos) targets.push(glos);
+    var vis={};
+    var obs=new IntersectionObserver(function(es){
+      es.forEach(function(en){ vis[en.target.id]=en.isIntersecting; });
+      for(var i=0;i<targets.length;i++){ if(vis[targets[i].id]){ mark(targets[i].id); break; } }
+    },{rootMargin:'-12% 0px -70% 0px'});
+    targets.forEach(function(el){ obs.observe(el); });
+  }
+})();
+</script>
+
 </body>
 </html>
