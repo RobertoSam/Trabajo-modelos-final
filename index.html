@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solucionario Regresión y Ridge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg-full.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0}
+/* Layout: una columna de lectura tipo cuaderno de estudio, índice arriba, cada ejercicio con idea clave + desarrollo + resultado */
+:root{
+  --bg:#F4F6F9; --paper:#FFFFFF; --ink:#1B2130; --muted:#5A6377; --line:#DCE1EA;
+  --accent:#2F4A8C; --res:#EAF2EF; --res-ink:#1F5A4C; --idea:#EEF1F8;
+  --f-display:"Newsreader", Georgia, "Times New Roman", serif;
+  --f-body:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#12151C; --paper:#1A1F29; --ink:#E4E8F0; --muted:#9AA3B5; --line:#2C3342;
+  --accent:#9DB3EE; --res:#16302A; --res-ink:#9FD8C6; --idea:#1E2535; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#12151C; --paper:#1A1F29; --ink:#E4E8F0; --muted:#9AA3B5; --line:#2C3342;
+  --accent:#9DB3EE; --res:#16302A; --res-ink:#9FD8C6; --idea:#1E2535; color-scheme:dark }
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.62}
+.wrap{max-width:820px;margin:0 auto;padding-inline:18px;padding-block:28px 64px}
+header h1{font-family:var(--f-display);font-weight:600;font-size:clamp(28px,5vw,40px);line-height:1.15;margin:0 0 8px;text-wrap:balance}
+header p{color:var(--muted);margin:0 0 6px;max-width:68ch}
+.conv{background:var(--paper);border:1px solid var(--line);padding:14px 18px;margin:20px 0 8px}
+.conv strong{font-weight:600}
+nav.idx{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:22px 0 10px}
+nav.idx div{min-width:0}
+nav.idx h2{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:500}
+nav.idx ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+nav.idx a{display:inline-block;min-width:34px;text-align:center;font-family:var(--f-mono);font-size:13px;padding:4px 8px;border:1px solid var(--line);background:var(--paper);color:var(--accent);text-decoration:none}
+nav.idx a:hover,nav.idx a:focus-visible{border-color:var(--accent);outline:none}
+section.part{margin-top:44px}
+section.part>h2{font-family:var(--f-display);font-weight:600;font-size:clamp(24px,4vw,30px);margin:0 0 4px;border-bottom:2px solid var(--ink);padding-bottom:6px}
+.part-sub{color:var(--muted);margin:6px 0 0}
+article.ex{background:var(--paper);border:1px solid var(--line);padding:18px 20px 16px;margin-top:22px;min-width:0}
+article.ex>h3{font-family:var(--f-display);font-weight:600;font-size:22px;margin:0 0 10px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+article.ex>h3 .n{font-family:var(--f-mono);font-size:13px;font-weight:500;color:var(--accent);letter-spacing:.04em}
+h4{font-size:15px;font-weight:600;margin:16px 0 4px;color:var(--accent)}
+.idea{background:var(--idea);padding:10px 14px;margin:6px 0 10px;font-size:15px}
+.idea b{font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;color:var(--muted);display:block;margin-bottom:2px}
+.res{background:var(--res);color:var(--res-ink);padding:8px 14px;margin:10px 0 4px;font-weight:500}
+.res mjx-container{color:var(--res-ink)}
+.enun{border:1px solid var(--line);border-left:3px solid var(--ink);background:var(--bg);padding:10px 16px 8px;margin:4px 0 14px}
+.enun p{margin:4px 0}
+.enun ul.parts{margin:6px 0 2px;padding-left:20px}
+.enun ul.parts li{margin:3px 0}
+.teo{background:var(--idea);padding:10px 16px 8px;margin:0 0 14px}
+.teo ul,.teo ol{margin:6px 0;padding-left:22px}
+.teo li{margin:3px 0}
+.lbl{display:block;font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;color:var(--muted);margin-bottom:4px}
+.teo .lbl{color:var(--accent)}
+.sol-lbl{font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;color:var(--res-ink);border-top:1px solid var(--line);padding-top:10px;margin-top:4px}
+p{margin:6px 0}
+.m{overflow-x:auto;overflow-y:hidden;max-width:100%}
+mjx-container[display="true"]{overflow-x:auto;overflow-y:hidden;max-width:100%;padding:2px 0}
+.tbl{overflow-x:auto;margin:10px 0}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:14.5px;min-width:100%}
+th,td{border-bottom:1px solid var(--line);padding:6px 10px;text-align:center;white-space:nowrap}
+th{font-family:var(--f-mono);font-weight:500;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.note{color:var(--muted);font-size:14.5px}
+footer{margin-top:40px;color:var(--muted);font-size:14px}
+@media (prefers-reduced-motion: reduce){*{scroll-behavior:auto}}
+html{scroll-behavior:smooth}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <h1>Solucionario: regresión lineal múltiple, polinomial y Ridge</h1>
+  <p>Modelos de Aprendizaje Automático · MMC–IMCA. Cada ejercicio incluye su enunciado, la base teórica que lo sustenta y la solución paso a paso. Cubre las dos listas: <em>Regresión lineal múltiple</em> (15 ejercicios) y <em>Regresión polinomial y regresión Ridge</em> (15 ejercicios). Todas las cifras fueron verificadas con aritmética racional exacta.</p>
+  <div class="conv">
+    <strong>Convenciones usadas en todo el documento.</strong>
+    $\;J(\beta)=\frac{1}{2n}\|y-X\beta\|_2^2$, $\;\mathrm{RSS}=\|r\|^2$, $\;\mathrm{MSE}=\frac1n\|r\|^2=2J$,
+    $\;\nabla J=\frac1n X^\top(X\beta-y)$, $\;H=\nabla^2J=\frac1n X^\top X$.
+    Para Ridge: $J_\lambda(\beta)=\frac{1}{2n}\big(\|y-Z\beta\|^2+\lambda\|\beta\|^2\big)$ y $\hat\beta_\lambda=(Z^\top Z+\lambda I)^{-1}Z^\top y$.
+  </div>
+</header>
+
+<nav class="idx" aria-label="Índice">
+  <div><h2>Parte I · Regresión lineal múltiple</h2>
+    <ul>
+      <li><a href="#a1">1</a></li><li><a href="#a2">2</a></li><li><a href="#a3">3</a></li><li><a href="#a4">4</a></li><li><a href="#a5">5</a></li>
+      <li><a href="#a6">6</a></li><li><a href="#a7">7</a></li><li><a href="#a8">8</a></li><li><a href="#a9">9</a></li><li><a href="#a10">10</a></li>
+      <li><a href="#a11">11</a></li><li><a href="#a12">12</a></li><li><a href="#a13">13</a></li><li><a href="#a14">14</a></li><li><a href="#a15">15</a></li>
+    </ul></div>
+  <div><h2>Parte II · Polinomial y Ridge</h2>
+    <ul>
+      <li><a href="#b1">1</a></li><li><a href="#b2">2</a></li><li><a href="#b3">3</a></li><li><a href="#b4">4</a></li><li><a href="#b5">5</a></li>
+      <li><a href="#b6">6</a></li><li><a href="#b7">7</a></li><li><a href="#b8">8</a></li><li><a href="#b9">9</a></li><li><a href="#b10">10</a></li>
+      <li><a href="#b11">11</a></li><li><a href="#b12">12</a></li><li><a href="#b13">13</a></li><li><a href="#b14">14</a></li><li><a href="#b15">15</a></li>
+    </ul></div>
+</nav>
+
+<!-- ======================= PARTE I ======================= -->
+<section class="part" id="parte1">
+<h2>Parte I · Regresión lineal múltiple</h2>
+<p class="part-sub">Datos de referencia que se usan una y otra vez:</p>
+<div class="m">$$
+\textbf{B: } X_B=\begin{pmatrix}1&amp;0&amp;0\\1&amp;1&amp;0\\1&amp;0&amp;1\\1&amp;1&amp;1\end{pmatrix},\;
+y_B=\begin{pmatrix}1\\2\\3\\5\end{pmatrix},\;
+X_B^\top X_B=\begin{pmatrix}4&amp;2&amp;2\\2&amp;2&amp;1\\2&amp;1&amp;2\end{pmatrix},\;
+X_B^\top y_B=\begin{pmatrix}11\\7\\8\end{pmatrix}
+$$
+$$
+\textbf{A: } X_A=\begin{pmatrix}1&amp;-2&amp;2\\1&amp;-1&amp;-1\\1&amp;0&amp;-2\\1&amp;1&amp;-1\\1&amp;2&amp;2\end{pmatrix},\;
+y_A=\begin{pmatrix}-2\\0\\5\\8\\4\end{pmatrix},\;
+X_A^\top X_A=\begin{pmatrix}5&amp;0&amp;0\\0&amp;10&amp;0\\0&amp;0&amp;14\end{pmatrix},\;
+X_A^\top y_A=\begin{pmatrix}15\\20\\-14\end{pmatrix}
+$$</div>
+<p>En A las tres columnas son <strong>ortogonales</strong> ($\sum x_{i1}=\sum x_{i2}=\sum x_{i1}x_{i2}=0$), por eso $X_A^\top X_A$ es diagonal y $\hat\beta_A=(15/5,\;20/10,\;-14/14)=(3,2,-1)^\top$, con residuos $r=(1,-2,0,2,-1)$, $\mathrm{RSS}=10$, $J=1$. Usaremos estos valores desde el ejercicio 9.</p>
+
+<article class="ex" id="a1"><h3><span class="n">I·1</span> Costo de un candidato</h3>
+<div class="enun"><span class="lbl">Enunciado</span><p>Use el conjunto B y el vector candidato $\beta=(1,1,2)^\top$.</p><ul class="parts"><li>(a) Construya $X$ y $y$, incluyendo el intercepto.</li><li>(b) Calcule $X\beta$, el vector de residuos $r=y-X\beta$ y $\|r\|^2$.</li><li>(c) Calcule $J(\beta)$ y el error cuadrático medio $\mathrm{MSE}(\beta)$; explique su relación.</li></ul></div>
+<div class="teo"><span class="lbl">Base teórica</span><p><strong>Modelo matricial.</strong> Para $n$ observaciones y $p$ predictores, $y=X\beta+\varepsilon$ con $X\in\mathbb R^{n\times(p+1)}$, la <em>matriz de diseño</em>. Su primera columna es de unos: multiplicada por $\beta_0$ produce el intercepto en cada fila. La predicción es $\hat y=X\beta$ y el <em>residuo</em> $r=y-X\beta$ es lo que el modelo no explica.</p>
+<p><strong>Norma al cuadrado.</strong> $\|r\|^2=r^\top r=\sum_i r_i^2$, la suma de cuadrados residual (RSS).</p>
+<p><strong>Funciones de costo.</strong> $J(\beta)=\frac1{2n}\|r\|^2$ y $\mathrm{MSE}(\beta)=\frac1n\|r\|^2$. Multiplicar una función por una constante positiva no cambia sus minimizadores, así que ambas definen el mismo $\hat\beta$. El factor $\frac12$ es solo una convención para que el gradiente quede sin el 2 que sale de derivar el cuadrado.</p></div>
+<div class="sol-lbl">Solución</div>
+
+<h4>(a)</h4><p>$X=X_B$ (columna de unos para el intercepto) y $y=y_B$.</p>
+<h4>(b)</h4>
+<div class="m">$$X\beta=\begin{pmatrix}1\\1+1\\1+2\\1+1+2\end{pmatrix}=\begin{pmatrix}1\\2\\3\\4\end{pmatrix},\quad r=y-X\beta=\begin{pmatrix}0\\0\\0\\1\end{pmatrix},\quad \|r\|^2=1.$$</div>
+<h4>(c)</h4>
+<div class="m">$$J(\beta)=\frac{1}{2\cdot4}\cdot1=\frac18,\qquad \mathrm{MSE}(\beta)=\frac14\cdot1=\frac14,\qquad J=\tfrac12\,\mathrm{MSE}.$$</div>
+<p>Ambos tienen el mismo minimizador; el factor $\frac12$ solo sirve para que, al derivar, el 2 del cuadrado se cancele y el gradiente quede $\frac1nX^\top(X\beta-y)$.</p>
+<div class="res">$X\beta=(1,2,3,4)^\top$, $r=(0,0,0,1)^\top$, $\|r\|^2=1$, $J=1/8$, $\mathrm{MSE}=1/4$.</div>
+</article>
+
+<article class="ex" id="a2"><h3><span class="n">I·2</span> Gradiente y ecuaciones normales</h3>
+<div class="enun"><span class="lbl">Enunciado</span><p>Para el conjunto B, utilice la fórmula $\nabla J(\beta)=\frac1n X^\top(X\beta-y)$.</p><ul class="parts"><li>(a) Sustituya $X^\top X$, $X^\top y$ y $n$ para escribir las tres componentes del gradiente en función de $\beta_0,\beta_1,\beta_2$.</li><li>(b) Evalúe el gradiente en $\beta=(0,0,0)^\top$ y en $\beta=(1,1,2)^\top$. Calcule la dirección opuesta al gradiente en cada caso.</li><li>(c) Evalúe el gradiente en $\beta=(3/4,3/2,5/2)^\top$ e identifique cuál de los tres candidatos satisface las ecuaciones normales.</li></ul></div>
+<div class="teo"><span class="lbl">Base teórica</span><p><strong>Derivación del gradiente.</strong> Expandiendo, $J(\beta)=\frac1{2n}\left(y^\top y-2\beta^\top X^\top y+\beta^\top X^\top X\beta\right)$. Con las reglas $\nabla_\beta(a^\top\beta)=a$ y $\nabla_\beta(\beta^\top A\beta)=2A\beta$ para $A$ simétrica:</p>
+<div class="m">$$\nabla J(\beta)=\frac1n\left(X^\top X\beta-X^\top y\right)=\frac1nX^\top(X\beta-y)=-\frac1nX^\top r.$$</div>
+<p><strong>Significado geométrico.</strong> $\nabla J(\beta)$ apunta hacia donde $J$ crece más rápido; $-\nabla J(\beta)$ es la dirección de <em>máximo descenso</em> local.</p>
+<p><strong>Ecuaciones normales.</strong> La condición de primer orden $\nabla J(\beta)=0$ equivale a $X^\top X\beta=X^\top y$. Como $J$ es convexa (su Hessiana es semidefinida positiva, ver I·4), todo punto que anula el gradiente es un mínimo global.</p></div>
+<div class="sol-lbl">Solución</div>
+
+<h4>(a)</h4>
+<div class="m">$$\nabla J(\beta)=\frac14\left(X^\top X\beta-X^\top y\right)=\frac14\begin{pmatrix}4\beta_0+2\beta_1+2\beta_2-11\\2\beta_0+2\beta_1+\beta_2-7\\2\beta_0+\beta_1+2\beta_2-8\end{pmatrix}.$$</div>
+<h4>(b)</h4>
+<div class="m">$$\nabla J(0)=\tfrac14(-11,-7,-8)^\top=\left(-\tfrac{11}{4},-\tfrac74,-2\right)^\top,\qquad -\nabla J(0)=\left(\tfrac{11}{4},\tfrac74,2\right)^\top.$$
+$$\nabla J(1,1,2)=\tfrac14(10-11,\;7-7-1,\;8-8-1)\Rightarrow\left(-\tfrac14,-\tfrac14,-\tfrac14\right)^\top,\quad -\nabla J=\left(\tfrac14,\tfrac14,\tfrac14\right)^\top.$$</div>
+<p>(En $\beta=(1,1,2)$: $4+2+4-11=-1$, $2+2+2-7=-1$, $2+1+4-8=-1$.) En ambos casos la dirección de descenso dice “aumentar los tres coeficientes”, mucho más en $\beta=0$ porque está más lejos del óptimo.</p>
+<h4>(c)</h4>
+<p>Con $\beta=(3/4,3/2,5/2)$: $3+3+5=11$, $\;\tfrac32+3+\tfrac52=7$, $\;\tfrac32+\tfrac32+5=8$. Las tres componentes se anulan.</p>
+<div class="res">$\nabla J(3/4,3/2,5/2)=0$: solo este candidato satisface las ecuaciones normales.</div>
+</article>
+
+<article class="ex" id="a3"><h3><span class="n">I·3</span> Ajuste por mínimos cuadrados en B</h3>
+<div class="enun"><span class="lbl">Enunciado</span><p>Ajuste por mínimos cuadrados el modelo con intercepto y dos predictores del conjunto B.</p><ul class="parts"><li>(a) Plantee y resuelva las ecuaciones normales, sin calcular explícitamente una inversa.</li><li>(b) Calcule las predicciones, los residuos y el costo mínimo.</li><li>(c) Prediga la respuesta para $(x_1,x_2)=(2,1)$.</li></ul></div>
+<div class="teo"><span class="lbl">Base teórica</span><p><strong>Solución de mínimos cuadrados.</strong> Si $X^\top X$ es invertible, $\hat\beta=(X^\top X)^{-1}X^\top y$. En la práctica se resuelve el sistema $X^\top X\beta=X^\top y$ por eliminación gaussiana o Cholesky; invertir explícitamente cuesta más y amplifica errores de redondeo.</p>
+<p><strong>Interpretación geométrica.</strong> $\hat y=X\hat\beta$ es la <em>proyección ortogonal</em> de $y$ sobre el espacio columna $\operatorname{col}(X)$. Por eso el residuo es ortogonal a cada columna: $X^\top\hat r=0$. Con intercepto, la primera ecuación da $\sum_i\hat r_i=0$.</p>
+<p><strong>Predicción.</strong> Para un punto nuevo se arma el vector con el 1 del intercepto, $x_0=(1,x_1,x_2)^\top$, y se calcula $\hat y_0=x_0^\top\hat\beta$.</p></div>
+<div class="sol-lbl">Solución</div>
+
+<h4>(a) Ecuaciones normales</h4>
+<div class="m">$$\begin{cases}4\beta_0+2\beta_1+2\beta_2=11 &amp; (E_1)\\ 2\beta_0+2\beta_1+\beta_2=7 &amp; (E_2)\\ 2\beta_0+\beta_1+2\beta_2=8 &amp; (E_3)\end{cases}$$</div>
+<p>$E_1-2E_2:\;-2\beta_1=-3\Rightarrow\beta_1=\tfrac32$. $\;E_2-E_3:\;\beta_1-\beta_2=-1\Rightarrow\beta_2=\tfrac52$. $\;E_2:\;2\beta_0=7-3-\tfrac52=\tfrac32\Rightarrow\beta_0=\tfrac34$.</p>
+<h4>(b)</h4>
+<div class="m">$$\hat y=\left(\tfrac34,\tfrac94,\tfrac{13}4,\tfrac{19}4\right)^\top,\quad r=\left(\tfrac14,-\tfrac14,-\tfrac14,\tfrac14\right)^\top,\quad \mathrm{RSS}=\tfrac14,\quad J(\hat\beta)=\tfrac{1}{8}\cdot\tfrac14=\tfrac1{32}.$$</div>
+<p>Comprobación: $X^\top r=(0,0,0)^\top$ (los residuos son ortogonales a cada columna).</p>
+<h4>(c)</h4>
+<div class="m">$$\hat y(2,1)=\tfrac34+\tfrac32\cdot2+\tfrac52\cdot1=\tfrac{25}{4}=6.25.$$</div>
+<div class="res">$\hat\beta=(3/4,\,3/2,\,5/2)^\top$, $J_{\min}=1/32$, predicción en $(2,1)$: $25/4$.</div>
+</article>
+
+<article class="ex" id="a4"><h3><span class="n">I·4</span> Hessiana del conjunto A</h3>
+<div class="enun"><span class="lbl">Enunciado</span><p>Para el conjunto A, utilice $H=\nabla^2J=X^\top X/n$.</p><ul class="parts"><li>(a) Calcule la matriz Hessiana $H$, su determinante y sus valores propios.</li><li>(b) Para $v=(1,-1,2)^\top$, calcule $Hv$, $v^\top Hv$, $Xv$ y $\|Xv\|^2/n$. Compare los dos resultados escalares.</li><li>(c) A partir de los signos de los valores propios, clasifique la Hessiana e indique si el costo es estrictamente convexo y si el ajuste tiene un único vector de coeficientes.</li></ul></div>
+<div class="teo"><span class="lbl">Base teórica</span><p><strong>Hessiana.</strong> Derivando el gradiente otra vez, $H=\nabla^2J=\frac1nX^\top X$. No depende de $\beta$ porque $J$ es cuadrática, así que la curvatura es la misma en todo el espacio.</p>
+<p><strong>Semidefinida siempre.</strong> Para todo $v$: $v^\top Hv=\frac1nv^\top X^\top Xv=\frac1n\|Xv\|^2\ge0$.</p>
+<p><strong>Clasificación espectral</strong> (para $H$ simétrica):</p>
+<ul>
+<li>todos los $\lambda_j\gt0$ ⇒ <em>definida positiva</em> ⇒ $J$ estrictamente convexa ⇒ minimizador único;</li>
+<li>algún $\lambda_j=0$ ⇒ semidefinida y singular ⇒ $J$ es plana en la dirección del núcleo ⇒ infinitos minimizadores.</li>
+</ul>
+<p>Equivalencia útil: $H\succ0\iff Xv\neq0$ para todo $v\neq0\iff$ las columnas de $X$ son linealmente independientes ($\operatorname{rango}X=p+1$). Además, $\det H=\prod_j\lambda_j$, y en una matriz diagonal los valores propios son las entradas de la diagonal.</p></div>
+<div class="sol-lbl">Solución</div>
+
+<h4>(a)</h4>
+<div class="m">$$H=\frac{X_A^\top X_A}{5}=\begin{pmatrix}1&amp;0&amp;0\\0&amp;2&amp;0\\0&amp;0&amp;14/5\end{pmatrix},\qquad \det H=1\cdot2\cdot\tfrac{14}5=\tfrac{28}5,\qquad \lambda\in\{1,\,2,\,\tfrac{14}5\}.$$</div>
+<h4>(b) Con $v=(1,-1,2)^\top$</h4>
+<div class="m">$$Hv=\left(1,-2,\tfrac{28}5\right)^\top,\qquad v^\top Hv=1+2+\tfrac{56}5=\tfrac{71}5.$$
+$$Xv=(1-x_{i1}+2x_{i2})_i=(7,0,-3,-2,3)^\top,\qquad \frac{\|Xv\|^2}{5}=\frac{49+0+9+4+9}{5}=\frac{71}5.$$</div>
+<p>Coinciden, como debe ser: $v^\top Hv=v^\top\frac{X^\top X}{n}v=\frac1n(Xv)^\top(Xv)$.</p>
+<h4>(c)</h4>
+<p>Los tres valores propios son estrictamente positivos, luego $H$ es <strong>definida positiva</strong>. Como $H$ es constante, $J$ es estrictamente convexa y tiene un único minimizador, $\hat\beta=(3,2,-1)^\top$.</p>
+<div class="res">$H=\mathrm{diag}(1,2,14/5)$, $\det H=28/5$; $v^\top Hv=\|Xv\|^2/5=71/5$; $H\succ0$ ⇒ solución única.</div>
+</article>
+
+<article class="ex" id="a5"><h3><span class="n">I·5</span> Exceso de costo de tres candidatos</h3>
+<div class="enun"><span class="lbl">Enunciado</span><p>Para el conjunto B se conoce el ajuste $\hat\beta=(3/4,3/2,5/2)^\top$ con $J(\hat\beta)=1/32$. Considere los candidatos $\beta^{(a)}=(1,1,2)^\top$, $\beta^{(b)}=(1,2,3)^\top$, $\beta^{(c)}=(0,0,0)^\top$.</p><ul class="parts"><li>(a) Calcule las predicciones, los residuos y el costo $J$ para cada candidato.</li><li>(b) Para cada uno, calcule $d=\beta-\hat\beta$, $Xd$ y $\|Xd\|^2/(2n)$. Use la identidad $J(\beta)-J(\hat\beta)=\frac1{2n}\|X(\beta-\hat\beta)\|^2$ para comprobar numéricamente el exceso de costo.</li><li>(c) Ordene los tres candidatos de menor a mayor costo y calcule cuánto supera el costo del mejor candidato al costo mínimo.</li></ul></div>
+<div class="teo"><span class="lbl">Base teórica</span><p><strong>Desarrollo de Taylor exacto.</strong> Como $J$ es cuadrática, su desarrollo de segundo orden alrededor de $\hat\beta$ no tiene resto. Además $\nabla J(\hat\beta)=0$:</p>
+<div class="m">$$J(\beta)=J(\hat\beta)+\underbrace{\nabla J(\hat\beta)^\top d}_{=0}+\tfrac12d^\top Hd=J(\hat\beta)+\frac1{2n}\|Xd\|^2,\qquad d=\beta-\hat\beta.$$</div>
+<p><strong>Consecuencias.</strong> El exceso de costo depende solo de cuánto difieren las <em>predicciones</em> $X\beta$ de las óptimas $X\hat\beta$, y crece cuadráticamente. Las curvas de nivel de $J$ son elipsoides centrados en $\hat\beta$, con ejes en las direcciones propias de $H$.</p></div>
+<div class="sol-lbl">Solución</div>
+
+<p>Recordemos $\hat\beta=(3/4,3/2,5/2)$, $X\hat\beta=(3/4,9/4,13/4,19/4)$, $J(\hat\beta)=1/32$, $2n=8$.</p>
+<h4>(a) y (b)</h4>
+<div class="tbl"><table>
+<tr><th></th><th>$\beta^{(a)}=(1,1,2)$</th><th>$\beta^{(b)}=(1,2,3)$</th><th>$\beta^{(c)}=(0,0,0)$</th></tr>
+<tr><td>$\hat y$</td><td>$(1,2,3,4)$</td><td>$(1,3,4,6)$</td><td>$(0,0,0,0)$</td></tr>
+<tr><td>$r$</td><td>$(0,0,0,1)$</td><td>$(0,-1,-1,-1)$</td><td>$(1,2,3,5)$</td></tr>
+<tr><td>$J$</td><td>$1/8$</td><td>$3/8$</td><td>$39/8$</td></tr>
+<tr><td>$d=\beta-\hat\beta$</td><td>$(\frac14,-\frac12,-\frac12)$</td><td>$(\frac14,\frac12,\frac12)$</td><td>$(-\frac34,-\frac32,-\frac52)$</td></tr>
+<tr><td>$Xd$</td><td>$(\frac14,-\frac14,-\frac14,-\frac34)$</td><td>$(\frac14,\frac34,\frac34,\frac54)$</td><td>$(-\frac34,-\frac94,-\frac{13}4,-\frac{19}4)$</td></tr>
+<tr><td>$\|Xd\|^2$</td><td>$12/16$</td><td>$44/16$</td><td>$620/16$</td></tr>
+<tr><td>$\|Xd\|^2/8$</td><td>$3/32$</td><td>$11/32$</td><td>$155/32$</td></tr>
+<tr><td>$J-J(\hat\beta)$</td><td>$\frac{4}{32}-\frac1{32}=\frac3{32}$ ✓</td><td>$\frac{12}{32}-\frac1{32}=\frac{11}{32}$ ✓</td><td>$\frac{156}{32}-\frac1{32}=\frac{155}{32}$ ✓</td></tr>
+</table></div>
+<h4>(c)</h4>
+<div class="res">Orden: $\beta^{(a)}\;(1/8)\lt\beta^{(b)}\;(3/8)\lt\beta^{(c)}\;(39/8)$. El mejor supera al mínimo en $3/32=0.09375$ (su costo es 4 veces el mínimo).</div>
+</article>
+
+<article class="ex" id="a6"><h3><span class="n">I·6</span> Colinealidad exacta</h3>
+<div class="enun"><span class="lbl">Enunciado</span><p>Considere los datos $x_1=(-1,0,1,2)$, $x_2=(-2,0,2,4)$, $y=(0,1,2,3)$ y el modelo $y\approx\beta_0+\beta_1x_1+\beta_2x_2$.</p><ul class="parts"><li>(a) Muestre que $X^\top X$ no es invertible.</li><li>(b) Encuentre todos los vectores de coeficientes que minimizan $J$ y su costo.</li><li>(c) Compare sus predicciones en $(3,6)$ y en $(3,5)$. ¿La coincidencia de las predicciones de entrenamiento garantiza la coincidencia en cualquier punto nuevo?</li></ul></div>
+<div class="teo"><span class="lbl">Base teórica</span><p><strong>Colinealidad exacta.</strong> Si existe $c\neq0$ con $Xc=0$ (una columna es combinación lineal de otras), entonces $X^\top Xc=0$ y $X^\top X$ es singular.</p>
+<p><strong>Existencia y estructura de soluciones.</strong> Las ecuaciones normales siempre tienen solución, porque $X^\top y\in\operatorname{col}(X^\top)=\operatorname{col}(X^\top X)$. El conjunto de minimizadores es afín: $\{\beta_p+t\,c:\ c\in\mathcal N(X)\}$, donde $\beta_p$ es una solución particular.</p>
+<p><strong>Qué sí es único.</strong> Todas las soluciones dan el mismo $\hat y$, porque la proyección sobre $\operatorname{col}(X)$ es única. Una predicción nueva $x_0^\top\beta$ es la misma para todas las soluciones si y solo si $x_0\perp\mathcal N(X)$, es decir, si el punto respeta la misma relación lineal que los datos.</p></div>
+<div class="sol-lbl">Solución</div>
+
+<h4>(a)</h4>
+<p>Se cumple $x_{i2}=2x_{i1}$ en todas las filas, así que la tercera columna de $X$ es el doble de la segunda: $X(0,-2,1)^\top=0$. Entonces $\operatorname{rango}X=2\lt3$ y</p>
+<div class="m">$$X^\top X=\begin{pmatrix}4&amp;2&amp;4\\2&amp;6&amp;12\\4&amp;12&amp;24\end{pmatrix},\qquad \det(X^\top X)=0\quad(\text{fila 3}=2\times\text{fila 2}).$$</div>
+<h4>(b)</h4>
+<p>$X^\top y=(6,8,16)^\top$. Con $s=\beta_1+2\beta_2$ las ecuaciones normales se reducen a $4\beta_0+2s=6$ y $2\beta_0+6s=8$, de donde $s=1$, $\beta_0=1$. Además $y_i=1+x_{i1}$ exactamente, así que el costo mínimo es cero.</p>
+<div class="m">$$\hat\beta(t)=(1,\;1-2t,\;t)^\top=(1,1,0)^\top+t\,(0,-2,1)^\top,\quad t\in\mathbb R,\qquad J_{\min}=0.$$</div>
+<h4>(c)</h4>
+<div class="m">$$\hat y(3,6)=1+3(1-2t)+6t=4\;\;\forall t,\qquad \hat y(3,5)=1+3(1-2t)+5t=4-t.$$</div>
+<div class="res">No. Coincidir en entrenamiento solo garantiza coincidir en puntos que respetan la misma relación $x_2=2x_1$; en $(3,5)$ la predicción depende de $t$ y es arbitraria.</div>
+</article>
+
+<article class="ex" id="a7"><h3><span class="n">I·7</span> Más parámetros que observaciones</h3>
+<div class="enun"><span class="lbl">Enunciado</span><p>Un problema con tres predictores y solo dos observaciones tiene $X=\begin{pmatrix}1&amp;0&amp;1&amp;0\\1&amp;1&amp;0&amp;1\end{pmatrix}$, $y=\begin{pmatrix}2\\3\end{pmatrix}$.</p><ul class="parts"><li>(a) Explique por qué $X^\top X$ es singular y determine el rango de $X$.</li><li>(b) Encuentre todos los minimizadores de $J$ y exhiba dos distintos.</li><li>(c) Determine si las predicciones de entrenamiento son únicas y explique por qué $n\lt p+1$ no garantiza por sí solo que cualquier conjunto de respuestas pueda interpolarse.</li></ul></div>
+<div class="teo"><span class="lbl">Base teórica</span><p><strong>Rango.</strong> $\operatorname{rango}(X^\top X)=\operatorname{rango}(X)\le\min(n,\,p+1)$. Si $n\lt p+1$, la matriz $(p+1)\times(p+1)$ $X^\top X$ tiene rango menor que su tamaño y es singular.</p>
+<p><strong>Solubilidad de $X\beta=y$.</strong> Hay solución exacta para <em>todo</em> $y\in\mathbb R^n$ si y solo si $\operatorname{col}(X)=\mathbb R^n$, es decir, $\operatorname{rango}X=n$. Cuando hay solución, el conjunto es $\beta_p+\mathcal N(X)$, con $\dim\mathcal N(X)=(p+1)-\operatorname{rango}X$ (teorema rango–nulidad).</p>
+<p><strong>Unicidad de $\hat y$.</strong> Igual que en I·6, $\hat y$ es la proyección de $y$ sobre $\operatorname{col}(X)$ y es única aunque $\hat\beta$ no lo sea.</p></div>
+<div class="sol-lbl">Solución</div>
+
+<h4>(a)</h4>
+<p>Las dos filas $(1,0,1,0)$ y $(1,1,0,1)$ no son proporcionales, así que $\operatorname{rango}X=2$. Como $\operatorname{rango}(X^\top X)=\operatorname{rango}X=2\lt4$, la matriz $4\times4$ $X^\top X$ es singular.</p>
+<h4>(b)</h4>
+<p>Como el rango es $n=2$, el sistema $X\beta=y$ tiene solución y el mínimo es $J=0$:</p>
+<div class="m">$$\beta_0+\beta_2=2,\quad \beta_0+\beta_1+\beta_3=3\;\Longrightarrow\;\beta=(a,\;3-a-b,\;2-a,\;b)^\top,\;a,b\in\mathbb R.$$</div>
+<p>Dos minimizadores distintos: $(2,1,0,0)^\top$ y $(0,3,2,0)^\top$ (ambos cumplen $2=2$, $3=3$).</p>
+<h4>(c)</h4>
+<p>Sí son únicas: $\hat y=Xb=y=(2,3)^\top$ para todo minimizador. En general $\hat y$ es la proyección ortogonal de $y$ sobre $\operatorname{col}(X)$, que es única aunque $\hat\beta$ no lo sea.</p>
+<p>Contraejemplo de por qué $n\lt p+1$ no basta: con $X=\begin{pmatrix}1&amp;1&amp;0&amp;0\\1&amp;1&amp;0&amp;0\end{pmatrix}$ (filas repetidas) y $y=(2,3)^\top$, ningún $\beta$ interpola, porque las dos predicciones son siempre iguales. Ahí $\operatorname{rango}X=1\lt n$.</p>
+<div class="res">$\operatorname{rango}X=2$; minimizadores $(a,3-a-b,2-a,b)$ con $J=0$; $\hat y=y$ único. Interpolar todo $y$ requiere rango $n$.</div>
+</article>
+
+<article class="ex" id="a8"><h3><span class="n">I·8</span> Descenso del gradiente en B</h3>
+<div class="enun"><span class="lbl">Enunciado</span><p>Aplique descenso del gradiente al conjunto B con $\beta^{(0)}=(0,0,0)^\top$ y tasa $\alpha=1/4$.</p><ul class="parts"><li>(a) Escriba la actualización usando los residuos.</li><li>(b) Calcule $\nabla J(\beta^{(0)})$, $\beta^{(1)}$, $\nabla J(\beta^{(1)})$ y $\beta^{(2)}$.</li><li>(c) Calcule los costos de las tres iteraciones y compárelos con el mínimo exacto.</li></ul></div>
+<div class="teo"><span class="lbl">Base teórica</span><p><strong>Descenso del gradiente (GD).</strong> $\beta^{(k+1)}=\beta^{(k)}-\alpha\nabla J(\beta^{(k)})$, con tasa de aprendizaje $\alpha\gt0$. En mínimos cuadrados $\nabla J=-\frac1nX^\top r$, así que cada paso suma a $\beta$ una combinación de las columnas ponderada por los residuos actuales: $\beta^{(k+1)}=\beta^{(k)}+\frac{\alpha}{n}X^\top r^{(k)}$.</p>
+<p><strong>Descenso monótono.</strong> Si $0\lt\alpha\lt2/\lambda_{\max}(H)$, el costo baja estrictamente en cada paso mientras $\nabla J\neq0$ (se demuestra en I·9).</p>
+<p><strong>Por qué usar GD.</strong> Cada iteración cuesta $O(np)$, mientras que resolver las ecuaciones normales cuesta $O(np^2+p^3)$. Con $p$ grande o datos masivos, GD y sus variantes estocásticas son el método estándar.</p></div>
+<div class="sol-lbl">Solución</div>
+
+<h4>(a)</h4>
+<div class="m">$$\beta^{(k+1)}=\beta^{(k)}-\frac{\alpha}{n}X^\top\big(X\beta^{(k)}-y\big)=\beta^{(k)}+\frac{1}{16}X^\top r^{(k)},\qquad r^{(k)}=y-X\beta^{(k)}.$$</div>
+<h4>(b)</h4>
+<p>$r^{(0)}=y=(1,2,3,5)$, $X^\top r^{(0)}=(11,7,8)$:</p>
+<div class="m">$$\nabla J(\beta^{(0)})=\left(-\tfrac{11}4,-\tfrac74,-2\right),\qquad \beta^{(1)}=\left(\tfrac{11}{16},\tfrac7{16},\tfrac12\right).$$</div>
+<p>$X\beta^{(1)}=\frac1{16}(11,18,19,26)$, $r^{(1)}=\frac1{16}(5,14,29,54)$, $X^\top r^{(1)}=\frac1{16}(102,68,83)$:</p>
+<div class="m">$$\nabla J(\beta^{(1)})=\left(-\tfrac{51}{32},-\tfrac{17}{16},-\tfrac{83}{64}\right),\qquad \beta^{(2)}=\left(\tfrac{139}{128},\tfrac{45}{64},\tfrac{211}{256}\right)\approx(1.086,\,0.703,\,0.824).$$</div>
+<h4>(c)</h4>
+<div class="tbl"><table>
+<tr><th>Iteración</th><th>$J$ exacto</th><th>decimal</th><th>veces el mínimo</th></tr>
+<tr><td>$\beta^{(0)}$</td><td>$39/8$</td><td>4.8750</td><td>156</td></tr>
+<tr><td>$\beta^{(1)}$</td><td>$1989/1024$</td><td>1.9424</td><td>62.2</td></tr>
+<tr><td>$\beta^{(2)}$</td><td>$227281/262144$</td><td>0.8670</td><td>27.7</td></tr>
+<tr><td>$\hat\beta$</td><td>$1/32$</td><td>0.03125</td><td>1</td></tr>
+</table></div>
+<p class="note">El costo baja monótonamente (más de la mitad por paso), pero tras dos pasos sigue lejos del mínimo. La tasa es segura: los valores propios de $H=X^\top X/4$ son $\frac14,\;\frac{7\pm\sqrt{33}}{8}$, con máximo $\approx1.59$, y $\alpha=\tfrac14\lt 2/1.59\approx1.26$.</p>
+</article>
+
+<article class="ex" id="a9"><h3><span class="n">I·9</span> Convergencia y tasa de aprendizaje</h3>
+<div class="enun"><span class="lbl">Enunciado</span><p>Para el conjunto A, la Hessiana es $H=\mathrm{diag}(1,2,14/5)$.</p><ul class="parts"><li>(a) Deduzca la recurrencia del error $d^{(k)}=\beta^{(k)}-\hat\beta$ bajo descenso del gradiente con tasa constante $\alpha$.</li><li>(b) Determine el intervalo de tasas que garantiza convergencia a $\hat\beta$ desde cualquier punto inicial.</li><li>(c) Analice $\alpha=1$ y $\alpha=5/7$ desde $\beta^{(0)}=0$. Explique por qué una tasa positiva no basta para garantizar convergencia.</li></ul></div>
+<div class="teo"><span class="lbl">Base teórica</span><p><strong>Gradiente en función del error.</strong> Usando $X^\top y=X^\top X\hat\beta$: $\nabla J(\beta)=\frac1nX^\top X(\beta-\hat\beta)=H\,d$. La actualización de GD da la recurrencia lineal $d^{(k+1)}=(I-\alpha H)d^{(k)}$, de donde $d^{(k)}=(I-\alpha H)^kd^{(0)}$.</p>
+<p><strong>Análisis espectral.</strong> Con $H=Q\Lambda Q^\top$, en la base propia cada componente del error se multiplica en cada paso por $1-\alpha\lambda_j$. Hay convergencia desde todo inicio si y solo si el radio espectral cumple</p>
+<div class="m">$$\rho(I-\alpha H)=\max_j|1-\alpha\lambda_j|\lt1\iff0\lt\alpha\lt\frac{2}{\lambda_{\max}}.$$</div>
+<p><strong>Velocidad.</strong> El error decae como $\rho^k$ (convergencia lineal). La tasa óptima es $\alpha^*=\frac{2}{\lambda_{\min}+\lambda_{\max}}$, con $\rho^*=\frac{\kappa-1}{\kappa+1}$ y $\kappa=\lambda_{\max}/\lambda_{\min}$ el número de condición. En A: $\alpha^*=10/19$ y $\rho^*=9/19\approx0.47$.</p></div>
+<div class="sol-lbl">Solución</div>
+
+<h4>(a)</h4>
+<p>Como $X^\top y=X^\top X\hat\beta$, se tiene $\nabla J(\beta)=H(\beta-\hat\beta)=Hd$. Restando $\hat\beta$ a la actualización:</p>
+<div class="m">$$d^{(k+1)}=(I-\alpha H)\,d^{(k)}\;\Longrightarrow\; d^{(k)}_j=(1-\alpha\lambda_j)^k\,d^{(0)}_j,\quad \lambda=(1,\,2,\,\tfrac{14}5).$$</div>
+<h4>(b)</h4>
+<p>Converge desde todo inicio $\iff |1-\alpha\lambda_j|\lt1\;\forall j\iff 0\lt\alpha\lt 2/\lambda_j\;\forall j\iff 0\lt\alpha\lt 2/\lambda_{\max}$.</p>
+<div class="res">$0\lt\alpha\lt \dfrac{2}{14/5}=\dfrac57$.</div>
+<h4>(c)</h4>
+<p>Desde $\beta^{(0)}=0$: $d^{(0)}=-\hat\beta=(-3,-2,1)$.</p>
+<p><strong>$\alpha=1$:</strong> factores $(0,-1,-\tfrac95)$. Entonces $\beta^{(k)}=\big(3,\;2-2(-1)^k,\;-1+(-\tfrac95)^k\big)$ para $k\ge1$: el intercepto queda exacto en un paso, $\beta_1$ oscila entre 4 y 0 sin converger, y $\beta_2$ <strong>diverge</strong> con signo alternado.</p>
+<p><strong>$\alpha=5/7$ (el borde):</strong> factores $(\tfrac27,-\tfrac37,-1)$. Las dos primeras componentes convergen, pero $\beta_2^{(k)}=-1+(-1)^k$ oscila para siempre entre $0$ y $-2$, y $J(\beta^{(k)})-J(\hat\beta)\ge\tfrac12\cdot\tfrac{14}{5}\cdot1=\tfrac75$ en todo paso.</p>
+<p>Una tasa positiva garantiza que el paso apunta “cuesta abajo”, pero no controla su tamaño: en la dirección más empinada ($\lambda=14/5$) un paso grande sobrepasa el fondo del valle y cae más arriba en la otra ladera.</p>
+</article>
+
+<article class="ex" id="a10"><h3><span class="n">I·10</span> Iteraciones explícitas en A</h3>
+<div class="enun"><span class="lbl">Enunciado</span><p>Use el conjunto A, $\beta^{(0)}=0$ y $\alpha=1/4$.</p><ul class="parts"><li>(a) Obtenga fórmulas explícitas para las tres componentes de $\beta^{(k)}$.</li><li>(b) Calcule $\beta^{(1)}$ y $\beta^{(2)}$.</li><li>(c) Determine el menor entero $k$ para el que $\|\beta^{(k)}-\hat\beta\|_\infty\lt0.01$, donde $\|v\|_\infty=\max_j|v_j|$.</li></ul></div>
+<div class="teo"><span class="lbl">Base teórica</span><p><strong>Forma cerrada de GD.</strong> De I·9, $\beta^{(k)}=\hat\beta+(I-\alpha H)^k(\beta^{(0)}-\hat\beta)$. Si $H$ es diagonal, las componentes se desacoplan; con $\beta^{(0)}=0$:</p>
+<div class="m">$$\beta_j^{(k)}=\hat\beta_j\left[1-(1-\alpha\lambda_j)^k\right].$$</div>
+<p><strong>Iteraciones necesarias.</strong> Para que $|d_j^{(0)}|\,|1-\alpha\lambda_j|^k\lt\varepsilon$ hace falta $k\gt\dfrac{\ln(|d_j^{(0)}|/\varepsilon)}{-\ln|1-\alpha\lambda_j|}$. Domina la componente con factor $|1-\alpha\lambda_j|$ más cercano a 1; con $\alpha$ pequeño, esa es la de menor $\lambda_j$ (la dirección menos curva del valle).</p></div>
+<div class="sol-lbl">Solución</div>
+
+<h4>(a)</h4>
+<p>Con $\alpha=\tfrac14$: factores $1-\tfrac14=\tfrac34$, $1-\tfrac12=\tfrac12$, $1-\tfrac{7}{10}=\tfrac3{10}$. Como $\beta^{(k)}=\hat\beta+(I-\alpha H)^k(0-\hat\beta)$:</p>
+<div class="m">$$\beta_0^{(k)}=3\left[1-\left(\tfrac34\right)^k\right],\qquad \beta_1^{(k)}=2\left[1-\left(\tfrac12\right)^k\right],\qquad \beta_2^{(k)}=-\left[1-\left(\tfrac3{10}\right)^k\right].$$</div>
+<h4>(b)</h4>
+<div class="m">$$\beta^{(1)}=\left(\tfrac34,\,1,\,-\tfrac7{10}\right),\qquad \beta^{(2)}=\left(\tfrac{21}{16},\,\tfrac32,\,-\tfrac{91}{100}\right).$$</div>
+<p class="note">Verificado también aplicando directamente la regla del gradiente.</p>
+<h4>(c)</h4>
+<div class="m">$$\|\beta^{(k)}-\hat\beta\|_\infty=\max\left\{3(\tfrac34)^k,\;2(\tfrac12)^k,\;(\tfrac3{10})^k\right\}=3(\tfrac34)^k\;\;(k\ge1).$$
+$$3(\tfrac34)^k\lt0.01\iff k\gt\frac{\ln300}{\ln(4/3)}\approx\frac{5.7038}{0.2877}\approx19.83.$$</div>
+<p>Comprobación: $k=19$ da $0.01268$; $k=20$ da $0.00951$.</p>
+<div class="res">$k=20$.</div>
+</article>
+
+<article class="ex" id="a11"><h3><span class="n">I·11</span> Reescalamiento de predictores</h3>
+<div class="enun"><span class="lbl">Enunciado</span><p>En el conjunto A, transforme los predictores mediante $z_{i1}=x_{i1}/\sqrt2$, $z_{i2}=x_{i2}/\sqrt{14/5}$, y ajuste $y\approx\theta_0+\theta_1z_1+\theta_2z_2$.</p><ul class="parts"><li>(a) Calcule $Z^\top Z/5$, donde $Z$ incluye una columna de unos.</li><li>(b) Determine la relación entre $\theta$ y los coeficientes originales $\beta$ y obtenga $\hat\theta$.</li><li>(c) Muestre que, en estas coordenadas, descenso del gradiente con $\alpha=1$ llega al mínimo en una sola actualización desde cualquier punto inicial. ¿Cambian las predicciones o el costo mínimo?</li></ul></div>
+<div class="teo"><span class="lbl">Base teórica</span><p><strong>Reparametrización.</strong> Si $Z=XD$ con $D$ invertible (aquí $D=\mathrm{diag}(1,1/\sqrt2,1/\sqrt{14/5})$), entonces $\operatorname{col}(Z)=\operatorname{col}(X)$. Los dos modelos describen exactamente las mismas funciones, con $Z\theta=X\beta\iff\beta=D\theta$. Predicciones y costo mínimo coinciden.</p>
+<p><strong>Lo que sí cambia es la curvatura.</strong> $H_Z=\frac1nZ^\top Z=D^\top H_XD$. Si se elige $D$ de modo que $H_Z=I$, el número de condición es $\kappa=1$, las curvas de nivel son esferas y el gradiente apunta directo al mínimo.</p>
+<p><strong>Paso de Newton.</strong> El método de Newton $\beta\leftarrow\beta-H^{-1}\nabla J$ alcanza el mínimo de una cuadrática en un paso. Con $H=I$, GD con $\alpha=1$ es exactamente Newton. Esto justifica estandarizar los predictores antes de usar GD.</p></div>
+<div class="sol-lbl">Solución</div>
+
+<h4>(a)</h4>
+<p>$\sum z_{i1}=\sum z_{i2}=\sum z_{i1}z_{i2}=0$, $\sum z_{i1}^2=10/2=5$, $\sum z_{i2}^2=14/(14/5)=5$:</p>
+<div class="m">$$\frac{Z^\top Z}{5}=I_3.$$</div>
+<h4>(b)</h4>
+<p>$\theta_0+\theta_1\frac{x_1}{\sqrt2}+\theta_2\frac{x_2}{\sqrt{14/5}}\equiv\beta_0+\beta_1x_1+\beta_2x_2$ obliga a $\theta_0=\beta_0$, $\theta_1=\sqrt2\,\beta_1$, $\theta_2=\sqrt{14/5}\,\beta_2$.</p>
+<div class="m">$$\hat\theta=\left(3,\;2\sqrt2,\;-\sqrt{14/5}\right)^\top\approx(3,\;2.828,\;-1.673)^\top.$$</div>
+<p class="note">Directamente: $\hat\theta=Z^\top y/5=(15,\;20/\sqrt2,\;-14/\sqrt{14/5})/5$, que da lo mismo.</p>
+<h4>(c)</h4>
+<div class="m">$$\theta^{(1)}=\theta^{(0)}-1\cdot H_Z(\theta^{(0)}-\hat\theta)=\theta^{(0)}-(\theta^{(0)}-\hat\theta)=\hat\theta\quad\text{para todo }\theta^{(0)}.$$</div>
+<div class="res">Llega en un paso. Las predicciones $Z\hat\theta=X\hat\beta$ y el costo mínimo ($J=1$) no cambian: es solo una reparametrización. Lo que mejora es el condicionamiento ($\kappa$ pasa de $14/5$ a $1$).</div>
+</article>
+
+<article class="ex" id="a12"><h3><span class="n">I·12</span> Transformación afín de la respuesta</h3>
+<div class="enun"><span class="lbl">Enunciado</span><p>Mantenga los predictores del conjunto A y transforme las respuestas a $y_i^*=2y_i+5$.</p><ul class="parts"><li>(a) Determine los nuevos coeficientes óptimos sin resolver nuevamente todo el sistema normal.</li><li>(b) Calcule las nuevas predicciones y los residuos.</li><li>(c) Calcule la nueva suma de cuadrados residual, el MSE y el costo mínimo. Justifique la regla utilizada mediante las ecuaciones normales.</li></ul></div>
+<div class="teo"><span class="lbl">Base teórica</span><p><strong>Linealidad del estimador.</strong> $\hat\beta(y)=(X^\top X)^{-1}X^\top y$ es una función lineal de $y$: $\hat\beta(ay+bw)=a\hat\beta(y)+b\hat\beta(w)$.</p>
+<p><strong>Papel del intercepto.</strong> Si $\mathbf1\in\operatorname{col}(X)$ (primera columna), entonces $\mathbf 1=Xe_0$ se ajusta exactamente con $\hat\beta(\mathbf1)=e_0$. Por tanto $\hat\beta(ay+b\mathbf1)=a\hat\beta(y)+b\,e_0$.</p>
+<p><strong>Residuos.</strong> Con la matriz sombrero $P=X(X^\top X)^{-1}X^\top$, $r=(I-P)y$. Como $(I-P)\mathbf1=0$, se obtiene $r^*=a\,r$, y por tanto $\mathrm{RSS}^*=a^2\,\mathrm{RSS}$. La traslación $b$ no afecta los residuos.</p></div>
+<div class="sol-lbl">Solución</div>
+
+<h4>(a)</h4>
+<p>La primera columna de $X$ es $\mathbf 1=Xe_0$, así que $X^\top\mathbf 1=X^\top Xe_0$. Luego</p>
+<div class="m">$$X^\top y^*=2X^\top y+5X^\top\mathbf1=X^\top X\,(2\hat\beta+5e_0),$$</div>
+<p>es decir, $\beta^*=2\hat\beta+5e_0$ satisface las ecuaciones normales y, como $H\succ0$, es la única solución.</p>
+<div class="m">$$\beta^*=(2\cdot3+5,\;2\cdot2,\;2\cdot(-1))=(11,\,4,\,-2)^\top.$$</div>
+<h4>(b)</h4>
+<p>$y^*=(1,5,15,21,13)$, $\;\hat y^*=2\hat y+5=(-1,9,15,17,15)$, $\;r^*=2r=(2,-4,0,4,-2)$.</p>
+<h4>(c)</h4>
+<div class="res">$\mathrm{RSS}^*=4\cdot10=40$, $\;\mathrm{MSE}^*=8$, $\;J^*=40/10=4$. El 5 lo absorbe el intercepto y el factor 2 escala residuos, así que el RSS se multiplica por $2^2$.</div>
+</article>
+
+<article class="ex" id="a13"><h3><span class="n">I·13</span> Replicar observaciones</h3>
+<div class="enun"><span class="lbl">Enunciado</span><p>Se repite exactamente $q$ veces cada observación de un conjunto de datos, con $q$ entero positivo, y se mantiene la definición de $J$ con el nuevo número de observaciones $n'=qn$.</p><ul class="parts"><li>(a) Determine los nuevos $(X')^\top X'$, $(X')^\top y'$ y la suma de cuadrados residual para un mismo $\beta$.</li><li>(b) ¿Cambian $J$, su gradiente, su Hessiana o el conjunto de minimizadores?</li><li>(c) Para el conjunto A y $q=3$, calcule la suma de cuadrados residual mínima, el MSE y $J$. ¿Cambiarían las iteraciones del descenso del gradiente si se conservan la tasa y el punto inicial?</li></ul></div>
+<div class="teo"><span class="lbl">Base teórica</span><p><strong>Matrices apiladas.</strong> Si $X'=\begin{pmatrix}X\\\vdots\\X\end{pmatrix}$ ($q$ bloques), los productos de Gram se suman por bloques: $(X')^\top X'=\sum_{k=1}^qX^\top X=qX^\top X$. Lo mismo vale para $(X')^\top y'$ y para cualquier suma de cuadrados.</p>
+<p><strong>Costo normalizado.</strong> $J$ es un promedio (divide por $n$), así que es invariante a la replicación. En cambio la suma total de cuadrados, sin normalizar, sí escala con $q$.</p>
+<p><strong>Advertencia estadística.</strong> Duplicar datos no añade información. Fórmulas inferenciales como $\hat\sigma^2=\mathrm{RSS}/(n-p-1)$ o los errores estándar sí cambian, y producirían una falsa sensación de precisión.</p></div>
+<div class="sol-lbl">Solución</div>
+
+<h4>(a)</h4>
+<div class="m">$$(X')^\top X'=qX^\top X,\qquad (X')^\top y'=qX^\top y,\qquad \mathrm{RSS}'(\beta)=q\,\mathrm{RSS}(\beta).$$</div>
+<h4>(b)</h4>
+<p>$J'(\beta)=\dfrac{q\,\mathrm{RSS}(\beta)}{2qn}=J(\beta)$. Por tanto el gradiente $\frac{1}{qn}qX^\top(X\beta-y)$, la Hessiana $\frac{qX^\top X}{qn}$ y el conjunto de minimizadores son idénticos.</p>
+<h4>(c)</h4>
+<div class="res">A con $q=3$: $\mathrm{RSS}'=30$, $\mathrm{MSE}'=30/15=2$, $J'=1$. Las iteraciones del descenso del gradiente no cambian (misma función gradiente, mismo $\alpha$ y punto inicial).</div>
+<p class="note">Lección estadística: duplicar datos no aporta información; si usáramos la suma de cuadrados sin dividir por $n$, la tasa efectiva sí se multiplicaría por $q$.</p>
+</article>
+
+<article class="ex" id="a14"><h3><span class="n">I·14</span> Modelo reducido vs completo</h3>
+<div class="enun"><span class="lbl">Enunciado</span><p>Compare dos ajustes sobre el conjunto A: el modelo reducido $y\approx\gamma_0+\gamma_1x_1$ y el modelo completo $y\approx\beta_0+\beta_1x_1+\beta_2x_2$.</p><ul class="parts"><li>(a) Obtenga los coeficientes del modelo reducido, sus residuos y su costo mínimo.</li><li>(b) Calcule cuánto disminuyen la suma de cuadrados residual y $J$ al incluir $x_2$.</li><li>(c) Demuestre que agregar predictores sin penalización nunca aumenta el costo mínimo sobre los mismos datos. Explique por qué esto no prueba una mejora en datos nuevos.</li></ul></div>
+<div class="teo"><span class="lbl">Base teórica</span><p><strong>Modelos anidados.</strong> El modelo reducido es el completo con la restricción $\beta_2=0$, y $\operatorname{col}(X_r)\subseteq\operatorname{col}(X)$. Minimizar sobre un conjunto mayor nunca da un valor mínimo mayor.</p>
+<p><strong>Pitágoras para proyecciones.</strong> Como $\hat y_r$ es también la proyección de $\hat y$ sobre $\operatorname{col}(X_r)$, se tiene $\mathrm{RSS}_r=\mathrm{RSS}+\|\hat y-\hat y_r\|^2\ge\mathrm{RSS}$.</p>
+<p><strong>Entrenamiento vs generalización.</strong> El error esperado en datos nuevos se descompone en sesgo² + varianza + ruido irreducible. Agregar predictores reduce el sesgo pero aumenta la varianza de $\hat\beta$. El error de entrenamiento siempre baja, mientras que el de prueba puede subir (sobreajuste).</p></div>
+<div class="sol-lbl">Solución</div>
+
+<h4>(a)</h4>
+<div class="m">$$X_r^\top X_r=\begin{pmatrix}5&amp;0\\0&amp;10\end{pmatrix},\;X_r^\top y=\begin{pmatrix}15\\20\end{pmatrix}\Rightarrow\hat\gamma=(3,\,2)^\top.$$</div>
+<p>$\hat y_r=3+2x_1=(-1,1,3,5,7)$, $\;r_r=(-1,-1,2,3,-3)$, $\;\mathrm{RSS}_r=24$, $\;J_r=24/10=2.4$.</p>
+<h4>(b)</h4>
+<div class="res">$\Delta\mathrm{RSS}=24-10=14$; $\;\Delta J=2.4-1=1.4=7/5$.</div>
+<p class="note">Por la ortogonalidad del diseño, $\Delta\mathrm{RSS}=\hat\beta_2^2\sum x_{i2}^2=1\cdot14$, y $\hat\gamma$ coincide con $(\hat\beta_0,\hat\beta_1)$.</p>
+<h4>(c) Demostración</h4>
+<p>Sea $J_{\text{red}}(\gamma)=J_{\text{comp}}(\gamma_0,\gamma_1,0)$. El modelo reducido es el completo restringido a $\{\beta:\beta_2=0\}$. Entonces</p>
+<div class="m">$$\min_\beta J_{\text{comp}}(\beta)\;\le\;J_{\text{comp}}(\hat\gamma_0,\hat\gamma_1,0)=\min_\gamma J_{\text{red}}(\gamma).\qquad\blacksquare$$</div>
+<p>Geométricamente: $\operatorname{col}(X_r)\subseteq\operatorname{col}(X)$, y proyectar $y$ sobre un subespacio mayor deja un residuo de norma menor o igual.</p>
+<p>Esto no prueba mejora en datos nuevos: el error de entrenamiento es un estimador optimista. Agregar predictores reduce sesgo pero aumenta la varianza de $\hat\beta$ y puede ajustar ruido (sobreajuste). Para decidir hay que usar validación, CV, o criterios penalizados ($R^2$ ajustado, AIC/BIC, Ridge).</p>
+</article>
+
+<article class="ex" id="a15"><h3><span class="n">I·15</span> Ajuste integral</h3>
+<div class="enun"><span class="lbl">Enunciado</span><p>Resuelva de forma integral el ajuste con intercepto para los datos $x_1=(-1,-1,0,0,1,1)$, $x_2=(-1,1,-1,1,-1,1)$, $y=(4,0,5,3,6,6)$.</p><ul class="parts"><li>(a) Construya $X$, calcule $X^\top X$ y $X^\top y$, y encuentre $\hat\beta$.</li><li>(b) Calcule predicciones, residuos, suma de cuadrados residual, MSE y $J$; compruebe $X^\top r=0$.</li><li>(c) Justifique la unicidad y prediga la respuesta en $(2,-1)$.</li><li>(d) Desde $\beta^{(0)}=0$, calcule una actualización con $\alpha=1$ y su costo. Determine si esa tasa garantiza convergencia desde cualquier inicio.</li></ul></div>
+<div class="teo"><span class="lbl">Base teórica</span><p>Este ejercicio integra toda la Parte I:</p>
+<ul>
+<li>ecuaciones normales $X^\top X\beta=X^\top y$ (I·2–I·3);</li>
+<li>ortogonalidad del residuo $X^\top r=0$ (proyección ortogonal);</li>
+<li>unicidad $\iff X^\top X\succ0\iff\operatorname{rango}X=p+1$ (I·4);</li>
+<li>convergencia de GD $\iff0\lt\alpha\lt2/\lambda_{\max}(H)$ (I·9).</li>
+</ul>
+<p><strong>Diseño ortogonal.</strong> En un diseño factorial equilibrado (cada combinación de niveles centrados aparece por igual), las columnas son mutuamente ortogonales. Entonces $X^\top X$ es diagonal y cada coeficiente se obtiene por separado: $\hat\beta_j=\dfrac{\sum_ix_{ij}y_i}{\sum_ix_{ij}^2}$.</p></div>
+<div class="sol-lbl">Solución</div>
+
+<h4>(a)</h4>
+<div class="m">$$X=\begin{pmatrix}1&amp;-1&amp;-1\\1&amp;-1&amp;1\\1&amp;0&amp;-1\\1&amp;0&amp;1\\1&amp;1&amp;-1\\1&amp;1&amp;1\end{pmatrix},\quad X^\top X=\begin{pmatrix}6&amp;0&amp;0\\0&amp;4&amp;0\\0&amp;0&amp;6\end{pmatrix},\quad X^\top y=\begin{pmatrix}24\\8\\-6\end{pmatrix},\quad \hat\beta=\begin{pmatrix}4\\2\\-1\end{pmatrix}.$$</div>
+<h4>(b)</h4>
+<p>$\hat y=4+2x_1-x_2=(3,1,5,3,7,5)$, $\;r=(1,-1,0,0,-1,1)$, $\;\mathrm{RSS}=4$, $\;\mathrm{MSE}=2/3$, $\;J=1/3$.</p>
+<p>$X^\top r$: $\;\sum r_i=0$; $\;\sum x_{i1}r_i=-1+1+0+0-1+1=0$; $\;\sum x_{i2}r_i=-1-1+0+0+1+1=0$. ✓</p>
+<h4>(c)</h4>
+<p>$X^\top X$ es diagonal con entradas positivas ⇒ definida positiva ⇒ rango 3 ⇒ solución única.</p>
+<div class="res">$\hat y(2,-1)=4+4+1=9$.</div>
+<h4>(d)</h4>
+<div class="m">$$\nabla J(0)=-\tfrac16X^\top y=\left(-4,-\tfrac43,1\right),\qquad \beta^{(1)}=\left(4,\tfrac43,-1\right),\qquad J(\beta^{(1)})=\tfrac{52/9}{12}=\tfrac{13}{27}\approx0.481.$$</div>
+<p>(Desde $J(0)=61/6\approx10.17$; el mínimo es $1/3$.) Como $H=X^\top X/6=\mathrm{diag}(1,\tfrac23,1)$, $\lambda_{\max}=1$ y la condición es $0\lt\alpha\lt2$.</p>
+<div class="res">$\alpha=1$ sí garantiza convergencia desde cualquier inicio: factores $(0,\tfrac13,0)$; $\beta_0,\beta_2$ quedan exactos en un paso y el error de $\beta_1$ se divide por 3 en cada paso.</div>
+</article>
+</section>
+
+<!-- ======================= PARTE II ======================= -->
+<section class="part" id="parte2">
+<h2>Parte II · Regresión polinomial y Ridge</h2>
+<p class="part-sub">Resultado que se usa a menudo: si $Z^\top Z$ es diagonal (columnas ortogonales), Ridge actúa coordenada a coordenada con $\hat\beta_{\lambda,j}=\dfrac{(Z^\top y)_j}{(Z^\top Z)_{jj}+\lambda}$.</p>
+
+<article class="ex" id="b1"><h3><span class="n">II·1</span> Matriz de diseño polinomial</h3>
+<div class="enun"><span class="lbl">Enunciado</span><p>Se tienen los valores $x=(-1,0,2)$ y se desea ajustar un polinomio de grado 2.</p><ul class="parts"><li>a) Construya la matriz de diseño $\Phi$.</li><li>b) Indique las dimensiones de $\Phi$, $\beta$ y $\hat y$.</li><li>c) Escriba, sin efectuar productos, la expresión matricial de las predicciones.</li></ul></div>
+<div class="teo"><span class="lbl">Base teórica</span><p><strong>Regresión polinomial.</strong> El modelo $y_i=\beta_0+\beta_1x_i+\dots+\beta_dx_i^d+\varepsilon_i$ es no lineal en $x$ pero <em>lineal en los parámetros</em>. Por eso es regresión lineal múltiple sobre las características $\phi(x)=(1,x,x^2,\dots,x^d)$.</p>
+<p><strong>Matriz de diseño.</strong> $\Phi_{ij}=x_i^{\,j}$ para $j=0,\dots,d$; es una matriz de Vandermonde de tamaño $n\times(d+1)$. Las predicciones son $\hat y=\Phi\beta$ y todo lo de la Parte I se aplica con $X=\Phi$.</p>
+<p><strong>Invertibilidad.</strong> Si $n=d+1$, $\det\Phi=\prod_{i\lt j}(x_j-x_i)$, que es distinto de cero cuando los $x_i$ son distintos.</p></div>
+<div class="sol-lbl">Solución</div>
+
+<div class="m">$$\text{(a)}\;\Phi=\begin{pmatrix}1&amp;-1&amp;1\\1&amp;0&amp;0\\1&amp;2&amp;4\end{pmatrix}\qquad\text{(b)}\;\Phi\in\mathbb R^{3\times3},\;\beta\in\mathbb R^{3\times1},\;\hat y\in\mathbb R^{3\times1}\qquad\text{(c)}\;\hat y=\Phi\beta.$$</div>
+<p class="note">Con $n=d+1$ y valores $x_i$ distintos, $\Phi$ es una Vandermonde invertible: el polinomio puede interpolar los tres puntos.</p>
+</article>
+
+<article class="ex" id="b2"><h3><span class="n">II·2</span> Residuos y ECM</h3>
+<div class="enun"><span class="lbl">Enunciado</span><p>Considere el modelo $\hat y=1-2x+\tfrac12x^2$ y las observaciones $x=(-2,1,3)$, $y=(7,0,-1)$. Calcule $\hat y$, el vector de residuos $e=y-\hat y$ y $\mathrm{ECM}=\frac1n\sum_{i=1}^ne_i^2$.</p></div>
+<div class="teo"><span class="lbl">Base teórica</span><p><strong>Evaluación del modelo.</strong> Con $\beta$ fijo, $\hat y_i=\phi(x_i)^\top\beta$ y $e_i=y_i-\hat y_i$.</p>
+<p><strong>ECM.</strong> $\mathrm{ECM}=\frac1n\|e\|^2$ es la misma medida que el MSE de la Parte I, y $J=\frac12\mathrm{ECM}$. Su raíz, $\sqrt{\mathrm{ECM}}$, está en las unidades de $y$ y es más fácil de interpretar.</p></div>
+<div class="sol-lbl">Solución</div>
+<div class="m">$$\hat y(-2)=1+4+2=7,\quad \hat y(1)=1-2+\tfrac12=-\tfrac12,\quad \hat y(3)=1-6+\tfrac92=-\tfrac12.$$
+$$e=y-\hat y=\left(0,\;\tfrac12,\;-\tfrac12\right),\qquad \mathrm{ECM}=\tfrac13\left(0+\tfrac14+\tfrac14\right)=\tfrac16\approx0.1667.$$</div>
+<div class="res">$\hat y=(7,-0.5,-0.5)$, $e=(0,0.5,-0.5)$, ECM $=1/6$.</div>
+</article>
+
+<article class="ex" id="b3"><h3><span class="n">II·3</span> Polinomio interpolante</h3>
+<div class="enun"><span class="lbl">Enunciado</span><p>Encuentre el polinomio $\hat y=\beta_0+\beta_1x+\beta_2x^2$ que pasa por los puntos $(-1,6)$, $(0,1)$, $(2,3)$. Plantee el sistema matricial, calcule los coeficientes y prediga el valor de $y$ cuando $x=3$.</p></div>
+<div class="teo"><span class="lbl">Base teórica</span><p><strong>Interpolación polinomial.</strong> Por $n$ puntos con abscisas distintas pasa un <em>único</em> polinomio de grado $\le n-1$. Se obtiene resolviendo $\Phi\beta=y$ con $\Phi$ de Vandermonde cuadrada e invertible.</p>
+<p>En este caso las ecuaciones normales $\Phi^\top\Phi\beta=\Phi^\top y$ equivalen a $\Phi\beta=y$, y el residuo es cero.</p>
+<p><strong>Advertencia.</strong> Un ajuste perfecto con tantos parámetros como datos no dice nada de la calidad predictiva. Con grados altos aparece oscilación entre los nodos y fuera de ellos (fenómeno de Runge), que motiva la regularización.</p></div>
+<div class="sol-lbl">Solución</div>
+<div class="m">$$\begin{pmatrix}1&amp;-1&amp;1\\1&amp;0&amp;0\\1&amp;2&amp;4\end{pmatrix}\begin{pmatrix}\beta_0\\\beta_1\\\beta_2\end{pmatrix}=\begin{pmatrix}6\\1\\3\end{pmatrix},\qquad \det\Phi=(0+1)(2+1)(2-0)=6\neq0.$$</div>
+<p>Fila 2: $\beta_0=1$. Filas 1 y 3: $-\beta_1+\beta_2=5$ y $2\beta_1+4\beta_2=2\Rightarrow\beta_1+2\beta_2=1$. Sumando: $3\beta_2=6$, $\beta_2=2$, $\beta_1=-3$.</p>
+<div class="res">$\hat y=1-3x+2x^2$; $\;\hat y(3)=1-9+18=10$.</div>
+<p class="note">Error de entrenamiento cero no significa buen modelo: con tantos parámetros como datos, el ajuste es exacto por construcción.</p>
+</article>
+
+<article class="ex" id="b4"><h3><span class="n">II·4</span> Ridge simple con estandarización</h3>
+<div class="enun"><span class="lbl">Enunciado</span><p>Sean $x=(2,4,6)$, $y=(1,4,7)$.</p><ul class="parts"><li>a) Calcule las medias y desviaciones estándar muestrales.</li><li>b) Estandarice $x$ e $y$.</li><li>c) Ajuste mediante Ridge el modelo $z_y=\gamma_1z_x$ con $\lambda=2$.</li><li>d) Regrese a las unidades originales y prediga $y$ para $x=5$.</li></ul></div>
+<div class="teo"><span class="lbl">Base teórica</span><p><strong>Estandarización muestral.</strong> $z_i=(x_i-\bar x)/s_x$ con $s_x=\sqrt{\frac1{n-1}\sum(x_i-\bar x)^2}$. Las variables estandarizadas tienen media 0, así que el modelo no necesita intercepto.</p>
+<p><strong>Ridge con un predictor.</strong> Minimizando $\frac1{2n}\left(\|z_y-\gamma z_x\|^2+\lambda\gamma^2\right)$ se obtiene $\hat\gamma=\dfrac{z_x^\top z_y}{z_x^\top z_x+\lambda}$. El $\lambda$ en el denominador encoge la pendiente hacia 0. Con $\lambda=0$, $\hat\gamma$ es la correlación muestral entre $x$ e $y$.</p>
+<p><strong>Volver a unidades originales.</strong> De $\frac{\hat y-\bar y}{s_y}=\hat\gamma\frac{x-\bar x}{s_x}$ sale $\hat y=\bar y+\hat\gamma\frac{s_y}{s_x}(x-\bar x)$.</p></div>
+<div class="sol-lbl">Solución</div>
+
+<h4>(a)</h4>
+<p>$\bar x=4$, $s_x=\sqrt{(4+0+4)/2}=2$; $\;\bar y=4$, $s_y=\sqrt{(9+0+9)/2}=3$.</p>
+<h4>(b)</h4>
+<p>$z_x=(-1,0,1)$, $\;z_y=(-1,0,1)$.</p>
+<h4>(c)</h4>
+<div class="m">$$\hat\gamma_1=\frac{z_x^\top z_y}{z_x^\top z_x+\lambda}=\frac{2}{2+2}=\frac12\qquad(\text{MCO daría }1).$$</div>
+<h4>(d)</h4>
+<div class="m">$$\frac{\hat y-4}{3}=\frac12\cdot\frac{x-4}{2}\;\Longrightarrow\;\hat y=4+\tfrac34(x-4)=1+0.75x,\qquad \hat y(5)=4.75.$$</div>
+<div class="res">$\hat y=1+0.75x$; predicción en $x=5$: $4.75$ (MCO, $\hat y=1.5x-2$, daría $5.5$).</div>
+</article>
+
+<article class="ex" id="b5"><h3><span class="n">II·5</span> Contracción con $Z^\top Z=I$</h3>
+<div class="enun"><span class="lbl">Enunciado</span><p>Suponga que los predictores están estandarizados y cumplen $Z^\top Z=I$. Los coeficientes de mínimos cuadrados ordinarios son $\hat\beta_{\text{OLS}}=(8,-4,2)^\top$.</p><ul class="parts"><li>a) Calcule los coeficientes Ridge para $\lambda=0.5$ y $\lambda=3$.</li><li>b) Calcule $\|\hat\beta\|_2^2$ para OLS y para las dos soluciones Ridge.</li><li>c) Describa el patrón de contracción observado.</li></ul></div>
+<div class="teo"><span class="lbl">Base teórica</span><p><strong>Solución Ridge.</strong> $\hat\beta_\lambda=(Z^\top Z+\lambda I)^{-1}Z^\top y$.</p>
+<p><strong>Caso ortonormal.</strong> Si $Z^\top Z=I$, entonces $\hat\beta_{\text{OLS}}=Z^\top y$ y</p>
+<div class="m">$$\hat\beta_\lambda=\frac{1}{1+\lambda}\hat\beta_{\text{OLS}}.$$</div>
+<p><strong>Caso general.</strong> Con la descomposición $Z^\top Z=Q\,\mathrm{diag}(\mu_j)Q^\top$, Ridge encoge cada dirección propia por $\frac{\mu_j}{\mu_j+\lambda}$ (ver II·13). La norma $\|\hat\beta_\lambda\|$ es estrictamente decreciente en $\lambda$ y tiende a 0 cuando $\lambda\to\infty$, pero ningún coeficiente se anula exactamente para $\lambda$ finito. Esa es la diferencia con Lasso, que penaliza $\|\beta\|_1$ y sí produce ceros.</p></div>
+<div class="sol-lbl">Solución</div>
+<div class="m">$$\hat\beta_\lambda=(I+\lambda I)^{-1}Z^\top y=\frac{\hat\beta_{\text{OLS}}}{1+\lambda}.$$</div>
+<div class="tbl"><table>
+<tr><th></th><th>OLS</th><th>$\lambda=0.5$</th><th>$\lambda=3$</th></tr>
+<tr><td>factor</td><td>1</td><td>$2/3$</td><td>$1/4$</td></tr>
+<tr><td>$\hat\beta$</td><td>$(8,-4,2)$</td><td>$(\frac{16}3,-\frac83,\frac43)$</td><td>$(2,-1,\frac12)$</td></tr>
+<tr><td>$\|\hat\beta\|_2^2$</td><td>84</td><td>$112/3\approx37.33$</td><td>$21/4=5.25$</td></tr>
+</table></div>
+<div class="res">Contracción uniforme hacia el origen: todos los coeficientes se multiplican por $1/(1+\lambda)$ y la norma al cuadrado por $1/(1+\lambda)^2$. Se conservan signos y proporciones; ninguno llega exactamente a cero (a diferencia de Lasso).</div>
+</article>
+
+<article class="ex" id="b6"><h3><span class="n">II·6</span> OLS vs Ridge en dos predictores</h3>
+<div class="enun"><span class="lbl">Enunciado</span><p>En un problema con respuesta centrada y predictores estandarizados se tiene $Z^\top Z=\begin{pmatrix}6&amp;1\\1&amp;5\end{pmatrix}$, $Z^\top y=\begin{pmatrix}13\\7\end{pmatrix}$.</p><ul class="parts"><li>a) Calcule los coeficientes OLS.</li><li>b) Calcule los coeficientes Ridge para $\lambda=3$.</li><li>c) Compare las predicciones OLS y Ridge para $(z_1,z_2)=(1.2,-0.5)$.</li></ul></div>
+<div class="teo"><span class="lbl">Base teórica</span><p><strong>Fórmulas de cierre.</strong> $\hat\beta_{\text{OLS}}=(Z^\top Z)^{-1}Z^\top y$ y $\hat\beta_\lambda=(Z^\top Z+\lambda I)^{-1}Z^\top y$. Ridge solo suma $\lambda$ a la diagonal.</p>
+<p><strong>Inversa $2\times2$.</strong> $\begin{pmatrix}a&amp;b\\c&amp;d\end{pmatrix}^{-1}=\frac{1}{ad-bc}\begin{pmatrix}d&amp;-b\\-c&amp;a\end{pmatrix}$.</p>
+<p><strong>Efecto de la penalización.</strong> Para $\lambda\gt0$ y $\hat\beta_{\text{OLS}}\neq0$ se cumple $\|\hat\beta_\lambda\|_2\lt\|\hat\beta_{\text{OLS}}\|_2$. Las predicciones $z_0^\top\hat\beta_\lambda$ suelen ser menos extremas: se acercan a la media de la respuesta, que aquí es 0.</p></div>
+<div class="sol-lbl">Solución</div>
+<h4>(a)</h4>
+<div class="m">$$\det=29,\quad (Z^\top Z)^{-1}=\tfrac1{29}\begin{pmatrix}5&amp;-1\\-1&amp;6\end{pmatrix},\quad \hat\beta_{\text{OLS}}=\tfrac1{29}(65-7,\;-13+42)=(2,\,1).$$</div>
+<h4>(b)</h4>
+<div class="m">$$Z^\top Z+3I=\begin{pmatrix}9&amp;1\\1&amp;8\end{pmatrix},\;\det=71,\quad \hat\beta_{3}=\tfrac1{71}(8\cdot13-7,\;-13+9\cdot7)=\left(\tfrac{97}{71},\tfrac{50}{71}\right)\approx(1.366,\,0.704).$$</div>
+<h4>(c)</h4>
+<div class="res">En $(1.2,-0.5)$: OLS $=2.4-0.5=1.9$; Ridge $=(116.4-25)/71=457/355\approx1.287$. Ridge es más conservador.</div>
+</article>
+
+<article class="ex" id="b7"><h3><span class="n">II·7</span> Unidades y penalización</h3>
+<div class="enun"><span class="lbl">Enunciado</span><p>Dos predictores representan esencialmente la misma magnitud, pero uno se mide en kilómetros y el otro en metros. Dos representaciones equivalentes producen los vectores de coeficientes $\beta_A=(2,2)^\top$, $\beta_B=(2,0.002)^\top$.</p><ul class="parts"><li>a) Calcule la penalización $\beta_1^2+\beta_2^2$ para cada modelo.</li><li>b) Explique por qué Ridge podría preferir artificialmente una representación si los predictores no se estandarizan.</li><li>c) Describa el preprocesamiento correcto antes de ajustar Ridge.</li></ul></div>
+<div class="teo"><span class="lbl">Base teórica</span><p><strong>OLS es equivariante a escala.</strong> Si $x_j\mapsto cx_j$, entonces $\hat\beta_j\mapsto\hat\beta_j/c$ y las predicciones no cambian.</p>
+<p><strong>Ridge no lo es.</strong> La penalización $\lambda\sum_j\beta_j^2$ compara números sin unidades. Un coeficiente pequeño por la unidad elegida paga poca penalización, y uno grande paga mucha, aunque el efecto real sea el mismo. El encogimiento efectivo de la variable $j$ es del orden de $\frac{\sum_ix_{ij}^2}{\sum_ix_{ij}^2+\lambda}$, que depende de la unidad.</p>
+<p><strong>Regla práctica.</strong> Estandarizar pone todos los predictores en la misma escala (varianza 1), de modo que $\lambda$ penaliza efectos comparables.</p></div>
+<div class="sol-lbl">Solución</div>
+<h4>(a)</h4>
+<div class="m">$$\|\beta_A\|^2=4+4=8,\qquad \|\beta_B\|^2=4+0.000004=4.000004.$$</div>
+<h4>(b)</h4>
+<p>Ambos modelos describen el mismo efecto (2 por km = 0.002 por metro), pero la penalización solo ve números. La variable en metros tiene valores 1000 veces mayores, así que su coeficiente es 1000 veces menor y casi no paga penalización. Ridge preferiría artificialmente la representación B y, en general, encogería mucho más la variable medida en la unidad “grande” (km). La penalización $\lambda\|\beta\|^2$ no es invariante a escala.</p>
+<h4>(c)</h4>
+<div class="res">Estandarizar cada predictor ($z=(x-\bar x)/s_x$, con media y desviación calculadas solo en entrenamiento), centrar $y$, no penalizar el intercepto, ajustar Ridge y luego volver a unidades originales con $b_j=\hat\beta_j\,(s_y)/s_{x_j}$ (o $\hat\beta_j/s_{x_j}$ si $y$ solo se centró) y $b_0=\bar y-\sum b_j\bar x_j$.</div>
+</article>
+
+<article class="ex" id="b8"><h3><span class="n">II·8</span> Costo penalizado y predicción</h3>
+<div class="enun"><span class="lbl">Enunciado</span><p>En un conjunto con respuesta centrada y predictores estandarizados se comparan, para $\lambda=2$, $\hat\beta_{\text{OLS}}=(4,-1,2)^\top$, $\hat\beta_{\text{Ridge}}=(3.1,-0.6,1.5)^\top$. Además $\mathrm{RSS}_{\text{OLS}}=120$, $\mathrm{RSS}_{\text{Ridge}}=124.8$, $n=100$.</p><ul class="parts"><li>a) Calcule $J_\lambda$ para ambos vectores.</li><li>b) Compare sus predicciones para $(z_1,z_2,z_3)=(1.2,-0.5,0.8)$.</li><li>c) Explique por qué Ridge puede ser preferible aunque tenga mayor RSS de entrenamiento.</li></ul></div>
+<div class="teo"><span class="lbl">Base teórica</span><p><strong>Costo penalizado.</strong> $J_\lambda(\beta)=\frac1{2n}\left(\mathrm{RSS}(\beta)+\lambda\|\beta\|_2^2\right)$. $\hat\beta_{\text{OLS}}$ minimiza el RSS; $\hat\beta_\lambda$ minimiza $J_\lambda$. Por definición, $J_\lambda(\hat\beta_\lambda)\le J_\lambda(\hat\beta_{\text{OLS}})$.</p>
+<p><strong>Descomposición sesgo–varianza.</strong> Para un punto nuevo, $\mathbb E[(y_0-\hat y_0)^2]=\sigma^2+\mathrm{Sesgo}^2+\mathrm{Var}(\hat y_0)$. Ridge introduce sesgo pero reduce la varianza. Existe siempre algún $\lambda\gt0$ con menor error cuadrático medio de estimación que OLS (Hoerl y Kennard, 1970). En la práctica, $\lambda$ se elige por validación cruzada.</p></div>
+<div class="sol-lbl">Solución</div>
+<h4>(a)</h4>
+<div class="m">$$J_2(\hat\beta_{\text{OLS}})=\frac{120+2(16+1+4)}{200}=\frac{162}{200}=0.810,\qquad J_2(\hat\beta_{\text{Ridge}})=\frac{124.8+2(9.61+0.36+2.25)}{200}=\frac{149.24}{200}=0.7462.$$</div>
+<p>Ridge tiene menor $J_\lambda$, como corresponde a su minimizador.</p>
+<h4>(b)</h4>
+<p>OLS: $4.8+0.5+1.6=6.90$. Ridge: $3.72+0.30+1.20=5.22$.</p>
+<h4>(c)</h4>
+<p>El RSS de entrenamiento sube solo 4% (120 → 124.8), pero la norma de los coeficientes cae de 21 a 12.22. El error esperado en datos nuevos es sesgo² + varianza + ruido; Ridge acepta un poco de sesgo a cambio de reducir bastante la varianza de $\hat\beta$, especialmente con predictores correlacionados o pocos datos. Por eso puede predecir mejor fuera de muestra; $\lambda$ se elige por validación cruzada, no por RSS de entrenamiento.</p>
+</article>
+
+<article class="ex" id="b9"><h3><span class="n">II·9</span> $Z^\top Z$ singular</h3>
+<div class="enun"><span class="lbl">Enunciado</span><p>Considere $Z=\begin{pmatrix}1&amp;1\\-1&amp;-1\end{pmatrix}$, $y=\begin{pmatrix}3\\-3\end{pmatrix}$.</p><ul class="parts"><li>a) Muestre que $Z^\top Z$ es singular y describa las soluciones de mínimos cuadrados que ajustan exactamente los datos.</li><li>b) Calcule $\hat\beta_\lambda$ para $\lambda=2$.</li><li>c) Verifique que $Z^\top Z+2I$ sí es invertible y obtenga las predicciones.</li></ul></div>
+<div class="teo"><span class="lbl">Base teórica</span><p><strong>Singularidad y soluciones.</strong> Si $Z$ no tiene rango columna completo, las soluciones de mínimos cuadrados forman un conjunto afín $\beta_p+\mathcal N(Z)$ (ver I·6). Entre ellas, la de norma mínima es $Z^+y$ (pseudoinversa de Moore–Penrose) y es la única ortogonal a $\mathcal N(Z)$.</p>
+<p><strong>Ridge regulariza el problema.</strong> Si $Z^\top Z$ tiene valores propios $\mu_j\ge0$, los de $Z^\top Z+\lambda I$ son $\mu_j+\lambda\ge\lambda\gt0$, así que la matriz es invertible. Además $\hat\beta_\lambda\to Z^+y$ cuando $\lambda\to0^+$: Ridge con $\lambda$ pequeño elige la solución de norma mínima.</p></div>
+<div class="sol-lbl">Solución</div>
+<h4>(a)</h4>
+<div class="m">$$Z^\top Z=\begin{pmatrix}2&amp;2\\2&amp;2\end{pmatrix},\;\det=0,\qquad Z^\top y=\begin{pmatrix}6\\6\end{pmatrix}.$$</div>
+<p>Ambas filas de $Z\beta=y$ dicen $\beta_1+\beta_2=3$: hay una recta de soluciones exactas $\{(t,\,3-t)\}$, todas con RSS $=0$. La de norma mínima es $(1.5,1.5)$.</p>
+<h4>(b) y (c)</h4>
+<div class="m">$$Z^\top Z+2I=\begin{pmatrix}4&amp;2\\2&amp;4\end{pmatrix},\;\det=12\neq0\;(\text{valores propios }6,2),\qquad \hat\beta_2=\begin{pmatrix}1\\1\end{pmatrix},\qquad Z\hat\beta_2=\begin{pmatrix}2\\-2\end{pmatrix}.$$</div>
+<div class="res">Ridge elige una solución única, $(1,1)$, alineada con la de norma mínima pero contraída por $2/3$. Sumar $\lambda I$ eleva los valores propios $(4,0)$ a $(6,2)$ y elimina la singularidad.</div>
+</article>
+
+<article class="ex" id="b10"><h3><span class="n">II·10</span> Ridge con escalas distintas</h3>
+<div class="enun"><span class="lbl">Enunciado</span><p>Se observan dos variables explicativas medidas en escalas diferentes: $x_1=(10,10,30,30)$, $x_2=(100,300,100,300)$, $y=(40,20,80,60)$.</p><ul class="parts"><li>a) Calcule las medias y desviaciones estándar muestrales de $x_1$ y $x_2$, y construya la matriz estandarizada $Z$.</li><li>b) Centre la respuesta y ajuste Ridge con $\lambda=3$.</li><li>c) Exprese el modelo en las unidades originales.</li><li>d) Prediga $y$ para $x_1=25$ y $x_2=150$.</li></ul></div>
+<div class="teo"><span class="lbl">Base teórica</span><p><strong>Flujo estándar de Ridge.</strong></p>
+<ol>
+<li>Estandarizar cada predictor, $z_{ij}=(x_{ij}-\bar x_j)/s_j$.</li>
+<li>Centrar la respuesta, $y_c=y-\bar y$; el intercepto no se penaliza.</li>
+<li>Calcular $\hat\beta_\lambda=(Z^\top Z+\lambda I)^{-1}Z^\top y_c$.</li>
+<li>Volver a las unidades originales: $b_j=\hat\beta_j/s_j$ y $b_0=\bar y-\sum_jb_j\bar x_j$.</li>
+</ol>
+<p><strong>Estructura de $Z^\top Z$.</strong> Con desviación muestral, $Z^\top Z=(n-1)R$, donde $R$ es la matriz de correlaciones de los predictores. Si los predictores no están correlacionados, $Z^\top Z=(n-1)I$ y Ridge encoge cada coeficiente por $\frac{n-1}{n-1+\lambda}$.</p></div>
+<div class="sol-lbl">Solución</div>
+<h4>(a)</h4>
+<p>$\bar x_1=20$, $s_1=\sqrt{400/3}=20/\sqrt3\approx11.547$; $\;\bar x_2=200$, $s_2=200/\sqrt3\approx115.47$. Con $a=\sqrt3/2\approx0.866$:</p>
+<div class="m">$$Z=\begin{pmatrix}-a&amp;-a\\-a&amp;a\\a&amp;-a\\a&amp;a\end{pmatrix},\qquad Z^\top Z=3I\;(=(n-1)I).$$</div>
+<h4>(b)</h4>
+<p>$\bar y=50$, $y_c=(-10,-30,30,10)$, $Z^\top y_c=(80a,\,-40a)$.</p>
+<div class="m">$$\hat\beta_3=\frac{Z^\top y_c}{3+3}=\left(\tfrac{20\sqrt3}{3},\,-\tfrac{10\sqrt3}{3}\right)\approx(11.547,\,-5.774).$$</div>
+<h4>(c)</h4>
+<div class="m">$$b_1=\frac{11.547}{11.547}=1,\quad b_2=\frac{-5.774}{115.47}=-0.05,\quad b_0=50-1\cdot20+0.05\cdot200=40.$$</div>
+<h4>(d)</h4>
+<div class="res">$\hat y=40+x_1-0.05x_2$; en $(25,150)$: $40+25-7.5=57.5$.</div>
+<p class="note">Comparación: OLS da $\hat y=30+2x_1-0.1x_2$ (ajusta los 4 puntos exactamente) y predice 65. Con $\lambda=3=n-1$ el factor es $3/6=1/2$: Ridge parte a la mitad ambas pendientes.</p>
+</article>
+
+<article class="ex" id="b11"><h3><span class="n">II·11</span> Descenso del gradiente con Ridge</h3>
+<div class="enun"><span class="lbl">Enunciado</span><p>Considere el criterio Ridge $J_\lambda(\beta)=\frac1{2n}\left(\|Z\beta-y\|_2^2+\lambda\|\beta\|_2^2\right)$, con gradiente $\nabla J_\lambda(\beta)=\frac1n\left[Z^\top(Z\beta-y)+\lambda\beta\right]$, y los datos $Z=\begin{pmatrix}1&amp;0\\0&amp;1\\1&amp;1\end{pmatrix}$, $y=\begin{pmatrix}2\\1\\3\end{pmatrix}$, $\beta^{(0)}=\begin{pmatrix}0\\0\end{pmatrix}$, $\alpha=0.3$, $\lambda=1.5$. Use $\beta^{(k+1)}=\beta^{(k)}-\alpha\nabla J_\lambda(\beta^{(k)})$.</p><ul class="parts"><li>a) Calcule el gradiente en $\beta^{(0)}$ y obtenga $\beta^{(1)}$.</li><li>b) Calcule el gradiente en $\beta^{(1)}$ y obtenga $\beta^{(2)}$.</li><li>c) Use $\beta^{(2)}$ para predecir en $(x_1,x_2)=(1,2)$ y explique por qué la regularización modifica la actualización desde la segunda iteración.</li></ul></div>
+<div class="teo"><span class="lbl">Base teórica</span><p><strong>GD sobre el costo penalizado.</strong> El gradiente tiene dos partes: la de ajuste, $\frac1nZ^\top(Z\beta-y)$, y la de penalización, $\frac{\lambda}{n}\beta$. Reordenando la actualización:</p>
+<div class="m">$$\beta^{(k+1)}=\Big(1-\frac{\alpha\lambda}{n}\Big)\beta^{(k)}-\frac{\alpha}{n}Z^\top(Z\beta^{(k)}-y).$$</div>
+<p>Esta es la forma de <em>weight decay</em>: antes de corregir por el error, los coeficientes se encogen por un factor fijo.</p>
+<p><strong>Convergencia.</strong> La Hessiana es $H_\lambda=\frac1n(Z^\top Z+\lambda I)$, y GD converge a $\hat\beta_\lambda$ si y solo si $0\lt\alpha\lt2/\lambda_{\max}(H_\lambda)$. Aquí $Z^\top Z$ tiene valores propios 3 y 1, así que $\lambda_{\max}(H_\lambda)=(3+1.5)/3=1.5$ y la cota es $\alpha\lt4/3$; $\alpha=0.3$ es segura.</p></div>
+<div class="sol-lbl">Solución</div>
+<p>$n=3$, $\alpha=0.3$, $\lambda=1.5$.</p>
+<h4>(a)</h4>
+<div class="m">$$\nabla J_\lambda(0)=\tfrac13\big[Z^\top(-y)+0\big]=\tfrac13(-5,-4)=\left(-\tfrac53,-\tfrac43\right),\qquad \beta^{(1)}=0-0.3\nabla=(0.5,\;0.4).$$</div>
+<h4>(b)</h4>
+<p>$Z\beta^{(1)}-y=(0.5,0.4,0.9)-(2,1,3)=(-1.5,-0.6,-2.1)$, $\;Z^\top(\cdot)=(-3.6,-2.7)$, $\;\lambda\beta^{(1)}=(0.75,0.6)$.</p>
+<div class="m">$$\nabla J_\lambda(\beta^{(1)})=\tfrac13(-2.85,-2.1)=(-0.95,-0.70),\qquad \beta^{(2)}=(0.5+0.285,\;0.4+0.21)=(0.785,\;0.61).$$</div>
+<h4>(c)</h4>
+<div class="res">$\hat y(1,2)=0.785+2(0.61)=2.005$.</div>
+<p>El término $\frac{\lambda}{n}\beta$ vale cero en $\beta^{(0)}=0$, así que el primer paso coincide con el de MCO. Desde el segundo paso actúa como <em>weight decay</em>: $\beta^{(k+1)}=(1-\tfrac{\alpha\lambda}{n})\beta^{(k)}-\tfrac{\alpha}{n}Z^\top(Z\beta^{(k)}-y)$, con factor $1-0.15=0.85$. Las iteraciones convergen a $\hat\beta_{1.5}=(6/5,\,4/5)$.</p>
+</article>
+
+<article class="ex" id="b12"><h3><span class="n">II·12</span> Derivación y unicidad de Ridge</h3>
+<div class="enun"><span class="lbl">Enunciado</span><p>Partiendo de $J_\lambda(\beta)=\frac1{2n}\left(\|y-Z\beta\|_2^2+\lambda\|\beta\|_2^2\right)$, derive el gradiente y la matriz Hessiana. Obtenga la solución cerrada y demuestre que, si $\lambda\gt0$, el minimizador es único incluso cuando $Z$ no tiene rango columna completo.</p></div>
+<div class="teo"><span class="lbl">Base teórica</span><p><strong>Herramientas.</strong></p>
+<ul>
+<li>Reglas de cálculo matricial: $\nabla_\beta(a^\top\beta)=a$ y $\nabla_\beta(\beta^\top A\beta)=(A+A^\top)\beta$.</li>
+<li>Criterio de segundo orden: si la Hessiana es definida positiva en todo punto, la función es estrictamente convexa.</li>
+<li>Una función estrictamente convexa tiene a lo sumo un minimizador, y si tiene un punto crítico, ese es el minimizador global.</li>
+<li>Una matriz simétrica definida positiva tiene todos sus valores propios positivos y es invertible.</li>
+</ul></div>
+<div class="sol-lbl">Solución</div>
+<p>Expandiendo:</p>
+<div class="m">$$J_\lambda(\beta)=\frac1{2n}\left[y^\top y-2\beta^\top Z^\top y+\beta^\top Z^\top Z\beta+\lambda\beta^\top\beta\right].$$</div>
+<p>Con $\nabla_\beta(\beta^\top a)=a$ y $\nabla_\beta(\beta^\top A\beta)=2A\beta$ para $A$ simétrica:</p>
+<div class="m">$$\nabla J_\lambda=\frac1n\left[Z^\top(Z\beta-y)+\lambda\beta\right],\qquad \nabla^2J_\lambda=\frac1n\left(Z^\top Z+\lambda I\right).$$</div>
+<p>Condición de primer orden: $(Z^\top Z+\lambda I)\beta=Z^\top y$.</p>
+<p><strong>Unicidad con $\lambda\gt0$.</strong> Para todo $v\neq0$:</p>
+<div class="m">$$v^\top(Z^\top Z+\lambda I)v=\|Zv\|^2+\lambda\|v\|^2\;\ge\;\lambda\|v\|^2\gt0.$$</div>
+<p>Así $Z^\top Z+\lambda I$ es definida positiva (sus valores propios son $\mu_i+\lambda\ge\lambda\gt0$, aunque algunos $\mu_i=0$), por tanto invertible, y $J_\lambda$ es estrictamente convexa. Un punto crítico de una función estrictamente convexa es su único minimizador global:</p>
+<div class="res">$\hat\beta_\lambda=(Z^\top Z+\lambda I)^{-1}Z^\top y$ existe y es único para todo $\lambda\gt0$, incluso si $\operatorname{rango}Z$ no es completo. $\blacksquare$</div>
+</article>
+
+<article class="ex" id="b13"><h3><span class="n">II·13</span> Ridge en la base de vectores propios</h3>
+<div class="enun"><span class="lbl">Enunciado</span><p>Se sabe que $Z^\top Z=Q\begin{pmatrix}9&amp;0\\0&amp;1\end{pmatrix}Q^\top$, con $Q=\frac1{\sqrt2}\begin{pmatrix}1&amp;-1\\1&amp;1\end{pmatrix}$, y que $Q^\top Z^\top y=\begin{pmatrix}18\\2\end{pmatrix}$. Calcule la solución ordinaria y la solución Ridge para $\lambda=3$, primero en la base de vectores propios y después en las coordenadas originales. Compare los factores de contracción de ambas direcciones y explique la diferencia.</p></div>
+<div class="teo"><span class="lbl">Base teórica</span><p><strong>Diagonalización.</strong> Como $Z^\top Z$ es simétrica, $Z^\top Z=Q\Lambda Q^\top$ con $Q$ ortogonal ($Q^\top Q=I$). Con el cambio de variable $\alpha=Q^\top\beta$ y $c=Q^\top Z^\top y$, el sistema Ridge $(Z^\top Z+\lambda I)\beta=Z^\top y$ se convierte en $(\Lambda+\lambda I)\alpha=c$, que es diagonal:</p>
+<div class="m">$$\alpha^{\text{OLS}}_j=\frac{c_j}{\mu_j},\qquad \alpha^{\lambda}_j=\frac{c_j}{\mu_j+\lambda}=\underbrace{\frac{\mu_j}{\mu_j+\lambda}}_{\text{factor de contracción}}\alpha^{\text{OLS}}_j.$$</div>
+<p><strong>Interpretación.</strong> Las direcciones propias de $Z^\top Z$ son las componentes principales de los predictores, y $\mu_j$ mide cuánta variabilidad hay en cada una. Como $\mathrm{Var}(\hat\alpha_j^{\text{OLS}})=\sigma^2/\mu_j$, las direcciones con $\mu_j$ pequeño se estiman con mucho ruido, y Ridge las encoge más. Los grados de libertad efectivos son $\mathrm{df}(\lambda)=\sum_j\frac{\mu_j}{\mu_j+\lambda}$.</p></div>
+<div class="sol-lbl">Solución</div>
+
+<p>Con $\alpha=Q^\top\beta$, las ecuaciones quedan $\mathrm{diag}(9,1)\,\alpha=Q^\top Z^\top y=(18,2)$:</p>
+<div class="m">$$\alpha_{\text{OLS}}=\left(\tfrac{18}9,\tfrac21\right)=(2,\,2),\qquad \alpha_{3}=\left(\tfrac{18}{12},\tfrac24\right)=\left(\tfrac32,\tfrac12\right).$$
+$$\beta=Q\alpha:\quad \beta_{\text{OLS}}=\tfrac1{\sqrt2}(0,\,4)=(0,\,2\sqrt2),\qquad \beta_3=\tfrac1{\sqrt2}(1,\,2)=\left(\tfrac{\sqrt2}2,\,\sqrt2\right)\approx(0.707,\,1.414).$$</div>
+<div class="res">Factores de contracción: $9/12=0.75$ en la dirección de $\mu=9$ y $1/4=0.25$ en la de $\mu=1$.</div>
+<p>La dirección con $\mu=1$ tiene poca variabilidad en los datos; su coeficiente se estima con alta varianza ($\mathrm{Var}\propto1/\mu$), así que Ridge lo encoge mucho. La dirección bien informada ($\mu=9$) casi se respeta. Por eso Ridge estabiliza justamente lo que la colinealidad vuelve inestable.</p>
+</article>
+
+<article class="ex" id="b14"><h3><span class="n">II·14</span> Invariancia por estandarización</h3>
+<div class="enun"><span class="lbl">Enunciado</span><p>Considere los datos $x_1=(1,1,3,3)$, $x_2=(18,22,18,22)$, $y=(7,5,15,13)$.</p><ul class="parts"><li>a) Usando desviaciones estándar poblacionales, estandarice $x_1$ y $x_2$, centre $y$ y ajuste Ridge con $\lambda=4$. Exprese el modelo en las unidades originales.</li><li>b) Cambie la unidad de la segunda variable mediante $x_2'=x_2/2$. Demuestre que su versión estandarizada no cambia y, por tanto, tampoco cambia el modelo Ridge estandarizado.</li><li>c) Ajuste ahora Ridge con $\lambda=4$ directamente sobre las variables centradas, pero sin estandarizarlas, primero usando $x_2$ y después usando $x_2'$. Compare las predicciones para $x_1=2.5$, $x_2=19$ y explique por qué difieren.</li></ul></div>
+<div class="teo"><span class="lbl">Base teórica</span><p><strong>Desviación poblacional.</strong> $\sigma_x=\sqrt{\frac1n\sum(x_i-\bar x)^2}$. Con ella, $Z^\top Z=nR$ ($R$ la matriz de correlaciones); con la muestral sería $(n-1)R$. La elección solo cambia la escala efectiva de $\lambda$.</p>
+<p><strong>Invariancia de la estandarización.</strong> Si $x'=cx+b$ con $c\gt0$, entonces $\bar x'=c\bar x+b$ y $\sigma_{x'}=c\,\sigma_x$, de modo que $z'=z$. Las variables estandarizadas no dependen de la unidad ni del origen. Por eso Ridge sobre datos estandarizados da el mismo modelo, y las mismas predicciones, en cualquier unidad.</p>
+<p><strong>Sin estandarizar.</strong> Con predictores centrados pero no escalados y columnas ortogonales, Ridge da $b_j=\dfrac{\tilde x_j^\top y_c}{\tilde x_j^\top\tilde x_j+\lambda}$. El factor de contracción $\frac{\tilde x_j^\top\tilde x_j}{\tilde x_j^\top\tilde x_j+\lambda}$ depende de la unidad de $x_j$.</p></div>
+<div class="sol-lbl">Solución</div>
+<h4>(a)</h4>
+<p>Desviaciones poblacionales: $\bar x_1=2,\;\sigma_1=1$; $\;\bar x_2=20,\;\sigma_2=2$; $\;\bar y=10$.</p>
+<div class="m">$$z_1=(-1,-1,1,1),\;z_2=(-1,1,-1,1),\;y_c=(-3,-5,5,3),\quad Z^\top Z=4I,\quad Z^\top y_c=(16,\,-4).$$
+$$\hat\beta_4=\frac{(16,-4)}{4+4}=(2,\,-0.5)\;\Rightarrow\;b_1=\tfrac21=2,\;b_2=\tfrac{-0.5}2=-0.25,\;b_0=10-4+5=11.$$</div>
+<div class="res">$\hat y=11+2x_1-0.25x_2$.</div>
+<h4>(b)</h4>
+<p>Si $x_2'=x_2/2$: $\bar x_2'=\bar x_2/2$ y $\sigma_2'=\sigma_2/2$, luego $z_2'=\dfrac{x_2/2-\bar x_2/2}{\sigma_2/2}=z_2$. En general $z$ es invariante ante $x\mapsto cx$ con $c\gt0$. Misma $Z$ ⇒ mismo $\hat\beta_\lambda$ estandarizado ⇒ mismas predicciones (en unidades de $x_2'$ el coeficiente es $-0.5$).</p>
+<h4>(c) Sin estandarizar, solo centrando</h4>
+<div class="tbl"><table>
+<tr><th></th><th>con $x_2$</th><th>con $x_2'=x_2/2$</th></tr>
+<tr><td>$\tilde X^\top\tilde X$</td><td>$\mathrm{diag}(4,16)$</td><td>$\mathrm{diag}(4,4)$</td></tr>
+<tr><td>$\tilde X^\top y_c$</td><td>$(16,-8)$</td><td>$(16,-4)$</td></tr>
+<tr><td>Ridge $\lambda=4$</td><td>$(16/8,\,-8/20)=(2,-0.4)$</td><td>$(16/8,\,-4/8)=(2,-0.5)$</td></tr>
+<tr><td>modelo</td><td>$14+2x_1-0.4x_2$</td><td>$11+2x_1-0.5x_2'$</td></tr>
+<tr><td>pred. $(2.5,\;19)$</td><td>$14+5-7.6=\mathbf{11.40}$</td><td>$11+5-4.75=\mathbf{11.25}$</td></tr>
+</table></div>
+<p>Difieren porque la penalización depende de la unidad. Medido en $x_2$ (varianza mayor), el coeficiente MCO es $-0.5$ y Ridge lo reduce solo al 80% ($16/20$). En $x_2'$ el MCO es $-1$ y Ridge lo reduce al 50% ($4/8$). Mismo fenómeno físico, distinta contracción: por eso hay que estandarizar antes de Ridge.</p>
+</article>
+
+<article class="ex" id="b15"><h3><span class="n">II·15</span> Polinomios ortogonales y Ridge</h3>
+<div class="enun"><span class="lbl">Enunciado</span><p>Para $x=(-1,0,1)$ se construyen las características polinomiales estandarizadas $z_1=x$, $z_2=\sqrt3\left(x^2-\frac23\right)$, con respuesta centrada $y=(2,-2,0)^\top$.</p><ul class="parts"><li>a) Construya $Z$ y verifique que $Z^\top Z=2I$.</li><li>b) Calcule el ajuste cuadrático ordinario y el ajuste Ridge para $\lambda=1$.</li><li>c) Compare las predicciones de ambos modelos para $x=2$.</li><li>d) Determine el menor $\lambda\ge0$ para el cual $\|\hat\beta_\lambda\|_2\le1$ y calcule entonces la predicción para $x=2$.</li></ul></div>
+<div class="teo"><span class="lbl">Base teórica</span><p><strong>Polinomios ortogonales.</strong> Las potencias $1,x,x^2$ suelen estar muy correlacionadas, lo que da un $\Phi^\top\Phi$ mal condicionado. Si se ortogonalizan respecto a los puntos de muestreo (aquí, $x^2$ centrado y escalado), $Z^\top Z$ queda diagonal y los coeficientes se desacoplan. El espacio de funciones es el mismo: siguen siendo polinomios de grado 2.</p>
+<p><strong>Ridge cuando $Z^\top Z=cI$.</strong> $\hat\beta_\lambda=\frac{Z^\top y}{c+\lambda}$, así que $\|\hat\beta_\lambda\|_2=\frac{\|Z^\top y\|_2}{c+\lambda}$ es decreciente en $\lambda$.</p>
+<p><strong>Forma restringida.</strong> El problema penalizado $\min\|y-Z\beta\|^2+\lambda\|\beta\|^2$ equivale, vía multiplicadores de Lagrange (condiciones KKT), a $\min\|y-Z\beta\|^2$ sujeto a $\|\beta\|_2\le t$. A cada $t$ activo le corresponde un único $\lambda\ge0$.</p></div>
+<div class="sol-lbl">Solución</div>
+<h4>(a)</h4>
+<div class="m">$$Z=\begin{pmatrix}-1&amp;1/\sqrt3\\0&amp;-2/\sqrt3\\1&amp;1/\sqrt3\end{pmatrix},\quad z_1^\top z_1=2,\;\;z_2^\top z_2=\tfrac{1+4+1}{3}=2,\;\;z_1^\top z_2=\tfrac{-1+0+1}{\sqrt3}=0\;\Rightarrow\;Z^\top Z=2I.$$</div>
+<h4>(b)</h4>
+<p>$Z^\top y=(-2,\;6/\sqrt3)=(-2,\;2\sqrt3)$.</p>
+<div class="m">$$\hat\beta_{\text{OLS}}=\tfrac12Z^\top y=(-1,\,\sqrt3),\qquad \hat\beta_1=\tfrac13Z^\top y=\left(-\tfrac23,\,\tfrac{2\sqrt3}{3}\right).$$</div>
+<p>En $x$: OLS $\Rightarrow\hat y=3x^2-x-2$ (interpola los tres puntos); Ridge $\Rightarrow\hat y=\frac23(3x^2-x-2)$.</p>
+<h4>(c)</h4>
+<p>En $x=2$: $z_1=2$, $z_2=\sqrt3(4-\tfrac23)=\tfrac{10\sqrt3}{3}$.</p>
+<div class="res">OLS: $-2+10=8$. Ridge ($\lambda=1$): $\frac23\cdot8=\frac{16}3\approx5.33$. Como $\bar y=0$, no hay intercepto que sumar.</div>
+<h4>(d)</h4>
+<div class="m">$$\|\hat\beta_\lambda\|_2=\frac{\|Z^\top y\|}{2+\lambda}=\frac{\sqrt{4+12}}{2+\lambda}=\frac{4}{2+\lambda}\le1\iff\lambda\ge2.$$</div>
+<div class="res">$\lambda_{\min}=2$, $\hat\beta_2=(-\tfrac12,\tfrac{\sqrt3}2)$ (norma 1), predicción en $x=2$: $8\cdot\tfrac24=4$.</div>
+<p class="note">Esto ilustra la equivalencia entre Ridge penalizado y Ridge con restricción $\|\beta\|_2\le t$: cada $t$ corresponde a un $\lambda$.</p>
+</article>
+</section>
+
+<footer>Verificación: cada resultado numérico se recalculó con aritmética racional exacta (SymPy) antes de redactarlo.</footer>
+</div>
+</body>
+</html>
