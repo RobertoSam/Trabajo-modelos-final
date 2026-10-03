@@ -9,8 +9,17 @@
 <script>
 window.MathJax = {
   tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
-  svg: { fontCache: 'global' }
+  svg: { fontCache: 'global' },
+  startup: { pageReady: () => MathJax.startup.defaultPageReady().then(fitMath) }
 };
+function fitMath(){
+  document.querySelectorAll('mjx-container:not([display="true"])').forEach(function(el){
+    var p = el.parentElement; if(!p) return;
+    el.classList.remove('mjx-wide');
+    if (el.getBoundingClientRect().width > p.clientWidth - 2) el.classList.add('mjx-wide');
+  });
+}
+var fitT; window.addEventListener('resize', function(){ clearTimeout(fitT); fitT = setTimeout(fitMath, 150); });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg-full.js"></script>
 <style>
@@ -70,6 +79,41 @@ h4{font-size:15px;font-weight:600;margin:16px 0 4px;color:var(--accent)}
 .gl-dl dt{font-weight:600}
 .gl-dl dd{margin:0;min-width:0}
 @media (max-width:560px){.gl-dl{grid-template-columns:1fr;gap:2px}.gl-dl dd{margin-bottom:10px}}
+.ruta{background:var(--paper);border:1px solid var(--line);padding:12px 18px;margin:16px 0 4px}
+.ruta ol{margin:4px 0;padding-left:22px;columns:2;column-gap:28px}
+.ruta li{margin:2px 0;break-inside:avoid}
+.ruta a{color:var(--accent);text-decoration:none}
+.ruta a:hover,.ruta a:focus-visible{text-decoration:underline}
+@media (max-width:560px){.ruta ol{columns:1}}
+.th .def,.th .thm,.th .proof{padding:10px 16px 8px;margin:12px 0}
+.th .def{background:var(--bg);border:1px solid var(--line)}
+.th .thm{background:var(--idea);border-left:3px solid var(--accent)}
+.th .proof{border-left:3px solid var(--line);padding-left:16px;background:transparent}
+.th .proof p,.th .proof .m{font-size:15px}
+.th .tag{display:block;font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;color:var(--muted);margin-bottom:4px}
+.th .thm .tag{color:var(--accent)}
+.th ul,.th ol{padding-left:22px;margin:6px 0}
+.th li{margin:3px 0}
+.ej{font-family:var(--f-mono);font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:8px;margin-top:14px}
+.fig{margin:14px 0;text-align:center}
+.fig > svg{width:100%;max-width:440px;height:auto}
+.fig figcaption{font-size:14px;color:var(--muted);max-width:60ch;margin:6px auto 0;text-align:left}
+.sv-plane{fill:var(--idea);stroke:var(--line);stroke-width:1.5}
+.sv-lab{font-family:var(--f-body);font-size:14px;fill:var(--ink)}
+.sv-muted{fill:var(--muted)}
+.sv-dot{fill:var(--ink)}
+.sv-dot2{fill:var(--muted)}
+.sv-acc{fill:var(--accent)}
+.sv-y{stroke:var(--ink);stroke-width:2;fill:none}
+.sv-yh{stroke:var(--accent);stroke-width:2.5;fill:none}
+.sv-r{stroke:var(--res-ink);stroke-width:2;stroke-dasharray:6 4;fill:none}
+.sv-rt{stroke:var(--res-ink);stroke-width:1.3;fill:none}
+.sv-other{stroke:var(--muted);stroke-width:1.3;stroke-dasharray:3 4;fill:none}
+.fm td{white-space:normal;text-align:left;vertical-align:top}
+.fm td:first-child{font-weight:500;color:var(--muted);width:30%;min-width:120px}
+.formulario h4{font-size:16px;margin-top:20px}
+.tips li{margin:6px 0}
+.mjx-wide{display:inline-block;max-width:100%;overflow-x:auto;overflow-y:hidden;vertical-align:middle;padding-bottom:2px}
 p{margin:6px 0}
 .m{overflow-x:auto;overflow-y:hidden;max-width:100%}
 mjx-container[display="true"]{overflow-x:auto;overflow-y:hidden;max-width:100%;padding:2px 0}
@@ -88,7 +132,7 @@ html{scroll-behavior:smooth}
 <div class="wrap">
 <header>
   <h1>Solucionario: regresión lineal múltiple, polinomial y Ridge</h1>
-  <p>Modelos de Aprendizaje Automático · MMC–IMCA. Cada ejercicio incluye su enunciado, la base teórica que lo sustenta y la solución paso a paso. Al final hay un glosario de siglas, símbolos y conceptos. Cubre las dos listas: <em>Regresión lineal múltiple</em> (15 ejercicios) y <em>Regresión polinomial y regresión Ridge</em> (15 ejercicios). Todas las cifras fueron verificadas con aritmética racional exacta.</p>
+  <p>Modelos de Aprendizaje Automático · MMC–IMCA. Empieza con un bloque de teoría (T1–T12) con demostraciones y un formulario para el examen. Luego, cada ejercicio incluye su enunciado, la base teórica que lo sustenta y la solución paso a paso. Al final hay un glosario de siglas, símbolos y conceptos. Cubre las dos listas: <em>Regresión lineal múltiple</em> (15 ejercicios) y <em>Regresión polinomial y regresión Ridge</em> (15 ejercicios). Todas las cifras fueron verificadas con aritmética racional exacta.</p>
   <div class="conv">
     <strong>Convenciones usadas en todo el documento.</strong>
     $\;J(\beta)=\frac{1}{2n}\|y-X\beta\|_2^2$, $\;\mathrm{RSS}=\|r\|^2$, $\;\mathrm{MSE}=\frac1n\|r\|^2=2J$,
@@ -110,8 +154,400 @@ html{scroll-behavior:smooth}
       <li><a href="#b6">6</a></li><li><a href="#b7">7</a></li><li><a href="#b8">8</a></li><li><a href="#b9">9</a></li><li><a href="#b10">10</a></li>
       <li><a href="#b11">11</a></li><li><a href="#b12">12</a></li><li><a href="#b13">13</a></li><li><a href="#b14">14</a></li><li><a href="#b15">15</a></li>
     </ul></div>
-<div><h2>Consulta</h2><ul><li><a href="#glosario" style="min-width:auto">Glosario</a></li></ul></div>
+<div><h2>Teoría y consulta</h2><ul><li><a href="#teoria" style="min-width:auto">Teoría T1–T12</a></li><li><a href="#formulario" style="min-width:auto">Formulario</a></li><li><a href="#glosario" style="min-width:auto">Glosario</a></li></ul></div>
 </nav>
+
+
+<!-- ======================= TEORÍA ======================= -->
+<section class="part" id="teoria">
+<h2>Teoría · de la regresión lineal a Ridge</h2>
+<p class="part-sub">Lectura secuencial: cada sección usa lo anterior. Los recuadros marcan definiciones, resultados y demostraciones; al final de cada sección se indican los ejercicios donde se aplica. El formulario para el examen está al final de este bloque.</p>
+
+<div class="ruta">
+<span class="lbl">Ruta</span>
+<ol>
+<li><a href="#t1">Modelo y función de costo</a></li>
+<li><a href="#t2">Herramientas de cálculo matricial</a></li>
+<li><a href="#t3">Gradiente, Hessiana y ecuaciones normales</a></li>
+<li><a href="#t4">Convexidad y unicidad</a></li>
+<li><a href="#t5">Geometría: proyección ortogonal</a></li>
+<li><a href="#t6">Cuando $X^\top X$ es singular</a></li>
+<li><a href="#t7">Transformaciones e invariancias</a></li>
+<li><a href="#t8">Descenso del gradiente</a></li>
+<li><a href="#t9">Regresión polinomial</a></li>
+<li><a href="#t10">Estandarización</a></li>
+<li><a href="#t11">Regresión Ridge</a></li>
+<li><a href="#t12">Sesgo, varianza y generalización</a></li>
+<li><a href="#formulario">Formulario y consejos para el examen</a></li>
+</ol>
+</div>
+
+<!-- T1 -->
+<article class="ex th" id="t1"><h3><span class="n">T1</span> Modelo y función de costo</h3>
+<p>Tenemos $n$ observaciones $(x_i,y_i)$, con $x_i=(x_{i1},\dots,x_{ip})\in\mathbb R^p$ ($p$ predictores) y $y_i\in\mathbb R$. Buscamos coeficientes tales que la respuesta sea, aproximadamente, una combinación lineal de los predictores.</p>
+<div class="def"><span class="tag">Definición · Modelo lineal</span>
+<div class="m">$$y_i=\beta_0+\beta_1x_{i1}+\dots+\beta_px_{ip}+\varepsilon_i\quad\Longleftrightarrow\quad y=X\beta+\varepsilon,$$</div>
+<p>donde $X\in\mathbb R^{n\times(p+1)}$ es la <b>matriz de diseño</b>: la fila $i$ es $(1,x_{i1},\dots,x_{ip})$. La columna de unos produce el intercepto $\beta_0$. El término $\varepsilon_i$ es el error, que no se observa.</p></div>
+<div class="def"><span class="tag">Definición · Residuo y costo</span>
+<p>Para cualquier $\beta$, la predicción es $\hat y=X\beta$ y el residuo es $r(\beta)=y-X\beta$. Se definen</p>
+<div class="m">$$\mathrm{RSS}(\beta)=\|r\|^2=\sum_{i=1}^n r_i^2,\qquad \mathrm{MSE}(\beta)=\frac{\mathrm{RSS}}{n},$$$$J(\beta)=\frac{1}{2n}\|y-X\beta\|^2=\tfrac12\,\mathrm{MSE}.$$</div></div>
+<p><b>Por qué cuadrados.</b> El costo cuadrático es diferenciable, castiga más los errores grandes y tiene solución cerrada. Además, si $\varepsilon_i\sim N(0,\sigma^2)$ independientes, la log-verosimilitud es $\ell(\beta)=\text{const}-\frac{\mathrm{RSS}(\beta)}{2\sigma^2}$, así que minimizar el RSS es lo mismo que maximizar la verosimilitud.</p>
+<p><b>Por qué el $\frac1{2n}$.</b> Multiplicar por una constante positiva no cambia el minimizador. El $\frac1n$ convierte el costo en un promedio, que no depende del tamaño de la muestra, y el $\frac12$ cancela el 2 que aparece al derivar.</p>
+<p class="ej">Se aplica en: I·1, I·5, II·2.</p>
+</article>
+
+<!-- T2 -->
+<article class="ex th" id="t2"><h3><span class="n">T2</span> Herramientas de cálculo matricial</h3>
+<p>Todo el curso descansa en pocas reglas. Conviene dominarlas antes de seguir.</p>
+<div class="def"><span class="tag">Reglas algebraicas</span>
+<ul><li>$\|v\|^2=v^\top v$; $\;(AB)^\top=B^\top A^\top$; $\;a^\top b=b^\top a$ (es un escalar).</li>
+<li>$A^\top A$ es siempre simétrica.</li></ul></div>
+<div class="thm"><span class="tag">Proposición 1 · Reglas de gradiente</span>
+<p>Para $a\in\mathbb R^m$ y $A\in\mathbb R^{m\times m}$:</p>
+<div class="m">$$\nabla_\beta(a^\top\beta)=a,\qquad \nabla_\beta(\beta^\top A\beta)=(A+A^\top)\beta\;\overset{A\text{ simétrica}}{=}\;2A\beta.$$</div></div>
+<div class="proof"><span class="tag">Demostración</span>
+<p>$a^\top\beta=\sum_ja_j\beta_j$, cuya derivada respecto a $\beta_k$ es $a_k$. Para la forma cuadrática, $\beta^\top A\beta=\sum_{i,j}A_{ij}\beta_i\beta_j$. Al derivar respecto a $\beta_k$ aparecen los términos con $i=k$ y con $j=k$:</p>
+<div class="m">$$\frac{\partial}{\partial\beta_k}\sum_{i,j}A_{ij}\beta_i\beta_j=\sum_jA_{kj}\beta_j+\sum_iA_{ik}\beta_i=(A\beta)_k+(A^\top\beta)_k.\qquad\blacksquare$$</div></div>
+<div class="thm"><span class="tag">Proposición 2 · Cuadráticas y Taylor exacto</span>
+<p>Si $f(\beta)=\tfrac12\beta^\top A\beta-b^\top\beta+c$ con $A$ simétrica, entonces $\nabla f(\beta)=A\beta-b$, $\nabla^2f=A$ (constante) y, para todo $d$,</p>
+<div class="m">$$f(\beta+d)=f(\beta)+\nabla f(\beta)^\top d+\tfrac12\,d^\top Ad\qquad(\text{sin resto}).$$</div></div>
+<div class="proof"><span class="tag">Demostración</span>
+<p>Expandiendo, $\tfrac12(\beta+d)^\top A(\beta+d)=\tfrac12\beta^\top A\beta+d^\top A\beta+\tfrac12d^\top Ad$, porque $\beta^\top Ad=d^\top A\beta$ por simetría. Restando $b^\top(\beta+d)$ y agrupando queda $f(\beta)+(A\beta-b)^\top d+\tfrac12d^\top Ad$. $\blacksquare$</p></div>
+<div class="thm"><span class="tag">Proposición 3 · Teorema espectral</span>
+<p>Toda matriz simétrica se escribe $A=Q\Lambda Q^\top$, con $Q$ ortogonal ($Q^\top Q=I$; sus columnas $q_j$ son vectores propios) y $\Lambda=\mathrm{diag}(\lambda_1,\dots,\lambda_m)$ con valores propios reales. En consecuencia:</p>
+<div class="m">$$v^\top Av=\sum_j\lambda_j\,(q_j^\top v)^2,\qquad \lambda_{\min}\|v\|^2\le v^\top Av\le\lambda_{\max}\|v\|^2.$$</div>
+<p>Por tanto, $A\succeq0$ (semidefinida positiva) si y solo si todo $\lambda_j\ge0$, y $A\succ0$ (definida positiva) si y solo si todo $\lambda_j\gt0$.</p></div>
+<p class="note">Atajos: los valores propios de una matriz diagonal o triangular son los elementos de su diagonal; $\det A=\prod_j\lambda_j$ y $\operatorname{tr}A=\sum_j\lambda_j$.</p>
+<p class="ej">Se aplica en: I·2, I·4, II·12, II·13.</p>
+</article>
+
+<!-- T3 -->
+<article class="ex th" id="t3"><h3><span class="n">T3</span> Gradiente, Hessiana y ecuaciones normales</h3>
+<p>Expandiendo el costo con las reglas de T2:</p>
+<div class="m">$$J(\beta)=\frac1{2n}(y-X\beta)^\top(y-X\beta)=\frac1{2n}\left(y^\top y-2\beta^\top X^\top y+\beta^\top X^\top X\beta\right).$$</div>
+<p>Es una cuadrática con $A=X^\top X/n$ y $b=X^\top y/n$.</p>
+<div class="thm"><span class="tag">Teorema 1 · Derivadas del costo</span>
+<div class="m">$$\nabla J(\beta)=\frac1nX^\top(X\beta-y)=-\frac1nX^\top r,\qquad H=\nabla^2J=\frac1nX^\top X.$$</div></div>
+<p>La Hessiana no depende de $\beta$: la curvatura de $J$ es la misma en todo el espacio. Esto es lo que hace tan limpio el análisis de mínimos cuadrados.</p>
+<div class="thm"><span class="tag">Teorema 2 · Ecuaciones normales</span>
+<p>$\nabla J(\beta)=0\iff X^\top X\beta=X^\top y$. Si $X^\top X$ es invertible, la única solución es $\hat\beta=(X^\top X)^{-1}X^\top y$.</p></div>
+<p>El nombre viene de que el residuo resulta “normal”, es decir perpendicular, a las columnas (ver T5).</p>
+<p><b>En la práctica</b> el sistema se resuelve por eliminación gaussiana o por factorización de Cholesky, sin calcular la inversa: es más barato y más estable numéricamente.</p>
+<p class="ej">Se aplica en: I·2, I·3, I·15, II·1–II·3.</p>
+</article>
+
+<!-- T4 -->
+<article class="ex th" id="t4"><h3><span class="n">T4</span> Convexidad y unicidad</h3>
+<p>Que el gradiente se anule no garantiza, en general, estar en un mínimo. Aquí sí lo garantiza, gracias a la forma de la Hessiana.</p>
+<div class="thm"><span class="tag">Teorema 3 · $H$ es semidefinida positiva</span>
+<p>Para todo $v$: $\;v^\top Hv=\frac1n\|Xv\|^2\ge0$.</p></div>
+<div class="proof"><span class="tag">Demostración</span><p>$v^\top X^\top Xv=(Xv)^\top(Xv)=\|Xv\|^2$. $\blacksquare$</p></div>
+<div class="thm"><span class="tag">Teorema 4 · Criterio de unicidad</span>
+<p>Las siguientes afirmaciones son equivalentes: (i) $H\succ0$; (ii) las columnas de $X$ son linealmente independientes; (iii) $\operatorname{rango}X=p+1$; (iv) $X^\top X$ es invertible.</p></div>
+<div class="proof"><span class="tag">Demostración</span>
+<p>$v^\top Hv=0\iff Xv=0$. Entonces $H\succ0$ (es decir, $v^\top Hv\gt0$ para todo $v\neq0$) equivale a que $Xv=0$ solo para $v=0$, que es la independencia lineal de las columnas, o sea rango completo. Una matriz simétrica definida positiva tiene valores propios positivos, luego $\det\neq0$ y es invertible. Recíprocamente, si $X^\top X$ es invertible, $X^\top Xv=0$ implica $v=0$, y como $Xv=0$ implica $X^\top Xv=0$, se tiene $Xv=0\Rightarrow v=0$. $\blacksquare$</p></div>
+<div class="thm"><span class="tag">Teorema 5 · Las ecuaciones normales dan el mínimo global</span>
+<p>Si $\hat\beta$ cumple $X^\top X\hat\beta=X^\top y$, entonces $\hat\beta$ minimiza $J$ globalmente. Si además $\operatorname{rango}X=p+1$, el minimizador es único.</p></div>
+<div class="proof"><span class="tag">Demostración</span>
+<p>Por el Taylor exacto (Prop. 2) con $\nabla J(\hat\beta)=0$ y $d=\beta-\hat\beta$:</p>
+<div class="m">$$J(\beta)=J(\hat\beta)+\tfrac12d^\top Hd=J(\hat\beta)+\frac1{2n}\|Xd\|^2\ \ge\ J(\hat\beta).$$</div>
+<p>La igualdad ocurre solo si $Xd=0$. Con rango completo, eso obliga a $d=0$, es decir $\beta=\hat\beta$. $\blacksquare$</p></div>
+<p><b>Consecuencia inmediata.</b> Si $n\lt p+1$ (más coeficientes que datos), entonces $\operatorname{rango}X\le n\lt p+1$ y el minimizador <em>nunca</em> es único.</p>
+<p class="ej">Se aplica en: I·4, I·5, I·6, I·7, I·15.</p>
+</article>
+
+<!-- T5 -->
+<article class="ex th" id="t5"><h3><span class="n">T5</span> Geometría: proyección ortogonal</h3>
+<p>El conjunto de todas las predicciones posibles, $\operatorname{col}(X)=\{X\beta\}$, es un subespacio de $\mathbb R^n$. Minimizar $\|y-X\beta\|$ es buscar el punto de ese subespacio más cercano a $y$.</p>
+<figure class="fig">
+<svg viewBox="0 0 440 230" role="img" aria-label="Proyección ortogonal de y sobre el espacio columna de X">
+  <polygon points="30,190 300,190 410,120 140,120" class="sv-plane"/>
+  <text x="36" y="212" class="sv-lab sv-muted">col(X): predicciones posibles</text>
+  <circle cx="95" cy="170" r="3.5" class="sv-dot"/>
+  <text x="70" y="186" class="sv-lab">0</text>
+  <line x1="95" y1="170" x2="250" y2="30" class="sv-y"/>
+  <circle cx="250" cy="30" r="4" class="sv-dot"/>
+  <text x="258" y="28" class="sv-lab">y</text>
+  <line x1="95" y1="170" x2="250" y2="152" class="sv-yh"/>
+  <circle cx="250" cy="152" r="4" class="sv-acc"/>
+  <text x="256" y="170" class="sv-lab">ŷ (predicción óptima)</text>
+  <line x1="250" y1="30" x2="250" y2="152" class="sv-r"/>
+  <polyline points="250,140 238,141.4 238,153.4" class="sv-rt"/>
+  <text x="257" y="98" class="sv-lab">r̂ = y − ŷ (residuo)</text>
+  <circle cx="175" cy="140" r="3.5" class="sv-dot2"/>
+  <text x="140" y="134" class="sv-lab sv-muted">Xβ</text>
+  <line x1="175" y1="140" x2="250" y2="30" class="sv-other"/>
+</svg>
+<figcaption>El residuo óptimo $\hat r$ es perpendicular al plano $\operatorname{col}(X)$. Cualquier otra predicción $X\beta$ queda más lejos de $y$, porque la distancia $\|y-X\beta\|$ es la hipotenusa de un triángulo rectángulo con catetos $\|\hat r\|$ y $\|X\beta-X\hat\beta\|$.</figcaption>
+</figure>
+<div class="thm"><span class="tag">Teorema 6 · Ortogonalidad del residuo</span>
+<p>$X^\top\hat r=0$: el residuo es ortogonal a cada columna de $X$. Con intercepto, la primera ecuación dice $\sum_i\hat r_i=0$; por tanto el promedio de $\hat y$ es igual a $\bar y$.</p></div>
+<div class="proof"><span class="tag">Demostración</span><p>$X^\top\hat r=X^\top y-X^\top X\hat\beta=0$ por las ecuaciones normales. $\blacksquare$</p></div>
+<div class="thm"><span class="tag">Teorema 7 · Pitágoras de mínimos cuadrados</span>
+<div class="m">$$\|y-X\beta\|^2=\|\hat r\|^2+\|X(\beta-\hat\beta)\|^2\quad\Longrightarrow\quad J(\beta)-J(\hat\beta)=\frac1{2n}\|X(\beta-\hat\beta)\|^2.$$</div></div>
+<div class="proof"><span class="tag">Demostración</span>
+<p>$y-X\beta=\hat r+X(\hat\beta-\beta)$. Al elevar al cuadrado, el término cruzado $2\hat r^\top X(\hat\beta-\beta)=2(X^\top\hat r)^\top(\hat\beta-\beta)$ vale 0 por el Teorema 6. $\blacksquare$</p></div>
+<div class="def"><span class="tag">Matriz sombrero</span>
+<p>Con rango completo, $P=X(X^\top X)^{-1}X^\top$ cumple $\hat y=Py$ y $\hat r=(I-P)y$. Es simétrica ($P^\top=P$), idempotente ($P^2=P$: proyectar dos veces es proyectar una vez) y deja fijo todo lo que ya está en el subespacio ($PX=X$). Además $\operatorname{tr}P=p+1$, el número de parámetros.</p></div>
+<p class="ej">Se aplica en: I·3, I·5, I·12, I·14, I·15.</p>
+</article>
+
+<!-- T6 -->
+<article class="ex th" id="t6"><h3><span class="n">T6</span> Cuando $X^\top X$ es singular</h3>
+<p>Ocurre con colinealidad exacta (una columna es combinación lineal de otras) o cuando hay más coeficientes que datos. La pregunta deja de ser “cuál es $\hat\beta$” y pasa a ser “qué es único y qué no”.</p>
+<div class="thm"><span class="tag">Lema 1 · Mismo núcleo, mismo rango</span>
+<p>$\mathcal N(X^\top X)=\mathcal N(X)$ y, por tanto, $\operatorname{rango}(X^\top X)=\operatorname{rango}(X)$.</p></div>
+<div class="proof"><span class="tag">Demostración</span>
+<p>Si $Xv=0$, entonces $X^\top Xv=0$. Si $X^\top Xv=0$, entonces $0=v^\top X^\top Xv=\|Xv\|^2$, así que $Xv=0$. Los rangos coinciden por el teorema rango–nulidad. $\blacksquare$</p></div>
+<div class="thm"><span class="tag">Teorema 8 · Las ecuaciones normales siempre tienen solución</span></div>
+<div class="proof"><span class="tag">Demostración</span>
+<p>Como $X^\top X$ es simétrica, $\operatorname{col}(X^\top X)=\mathcal N(X^\top X)^\perp=\mathcal N(X)^\perp=\operatorname{col}(X^\top)$. El vector $X^\top y$ está en $\operatorname{col}(X^\top)$, luego está en $\operatorname{col}(X^\top X)$, que es justamente lo que se necesita para que el sistema tenga solución. $\blacksquare$</p></div>
+<div class="thm"><span class="tag">Teorema 9 · Estructura de las soluciones</span>
+<p>Si $\beta_p$ es una solución, el conjunto de minimizadores es $\{\beta_p+c:\ c\in\mathcal N(X)\}$. Todos producen el mismo $\hat y=X\beta_p$ y el mismo costo mínimo. Su dimensión es $\dim\mathcal N(X)=(p+1)-\operatorname{rango}X$ (rango–nulidad).</p></div>
+<div class="proof"><span class="tag">Demostración</span><p>$X^\top X(\beta_p+c)=X^\top X\beta_p$ si y solo si $X^\top Xc=0$, si y solo si $c\in\mathcal N(X)$ (Lema 1). Además $X(\beta_p+c)=X\beta_p$. $\blacksquare$</p></div>
+<div class="thm"><span class="tag">Teorema 10 · Predicciones en puntos nuevos</span>
+<p>Para un punto nuevo $x_0$ (con su 1 de intercepto), $x_0^\top\beta$ toma el mismo valor para todos los minimizadores si y solo si $x_0\perp\mathcal N(X)$. Equivalentemente, $x_0$ pertenece al espacio fila de $X$: el punto respeta las mismas relaciones lineales que los datos.</p></div>
+<div class="proof"><span class="tag">Demostración</span><p>$x_0^\top(\beta_p+c)=x_0^\top\beta_p+x_0^\top c$. Este valor no depende de $c\in\mathcal N(X)$ si y solo si $x_0^\top c=0$ para todo $c$ del núcleo. $\blacksquare$</p></div>
+<div class="thm"><span class="tag">Teorema 11 · Interpolación</span>
+<p>$X\beta=y$ tiene solución para <em>todo</em> $y\in\mathbb R^n$ si y solo si $\operatorname{rango}X=n$. Tener $n\le p+1$ es necesario pero no suficiente: filas repetidas o proporcionales bajan el rango.</p></div>
+<p><b>Solución de norma mínima.</b> Entre todos los minimizadores hay exactamente uno ortogonal a $\mathcal N(X)$. Es el de menor norma y se escribe $X^+y$, donde $X^+$ es la pseudoinversa de Moore–Penrose. Ridge con $\lambda\to0^+$ converge a ella (T11).</p>
+<p class="ej">Se aplica en: I·6, I·7, II·9.</p>
+</article>
+
+<!-- T7 -->
+<article class="ex th" id="t7"><h3><span class="n">T7</span> Transformaciones e invariancias</h3>
+<p>Muchas preguntas de examen piden obtener un nuevo ajuste <em>sin volver a resolver</em>. Todas salen de estas reglas.</p>
+<div class="thm"><span class="tag">Prop. 4 · Respuesta afín (con intercepto)</span>
+<p>Si $y^*=a\,y+b\,\mathbf1$, entonces $\hat\beta^*=a\hat\beta+b\,e_0$, $\;\hat r^*=a\hat r\;$ y $\;\mathrm{RSS}^*=a^2\,\mathrm{RSS}$.</p></div>
+<div class="proof"><span class="tag">Demostración</span><p>$\mathbf 1=Xe_0$ porque es la primera columna. Entonces $X^\top y^*=aX^\top y+bX^\top Xe_0=X^\top X(a\hat\beta+be_0)$, que son las ecuaciones normales para $y^*$. El residuo es $y^*-X\hat\beta^*=a(y-X\hat\beta)+b(\mathbf1-Xe_0)=a\hat r$. $\blacksquare$</p></div>
+<div class="thm"><span class="tag">Prop. 5 · Reescalar los predictores</span>
+<p>Si $Z=XD$ con $D$ invertible, entonces $\operatorname{col}(Z)=\operatorname{col}(X)$. Se cumple $\hat\theta=D^{-1}\hat\beta$, las predicciones y el costo mínimo son los mismos, y $H_Z=D^\top H_XD$. Cambia la curvatura, no el modelo.</p></div>
+<div class="proof"><span class="tag">Demostración</span><p>$Z\theta=XD\theta$, así que $\theta\mapsto D\theta$ es una biyección entre los coeficientes de ambos modelos que conserva las predicciones. $H_Z=\frac1nD^\top X^\top XD$. $\blacksquare$</p></div>
+<div class="thm"><span class="tag">Prop. 6 · Replicar los datos $q$ veces</span>
+<p>$(X')^\top X'=qX^\top X$, $\;(X')^\top y'=qX^\top y$, $\;\mathrm{RSS}'=q\,\mathrm{RSS}$. Como $J$ divide por $n'=qn$, el costo, su gradiente, su Hessiana y los minimizadores no cambian.</p></div>
+<div class="thm"><span class="tag">Teorema 12 · Modelos anidados</span>
+<p>Si el modelo reducido se obtiene fijando algunos coeficientes del completo en 0, entonces $\min J_{\text{comp}}\le\min J_{\text{red}}$. Más aún, $\mathrm{RSS}_{\text{red}}=\mathrm{RSS}_{\text{comp}}+\|\hat y-\hat y_{\text{red}}\|^2$.</p></div>
+<div class="proof"><span class="tag">Demostración</span>
+<p>(i) El mínimo sobre un conjunto mayor no puede ser mayor que el mínimo sobre un subconjunto. (ii) Como $\operatorname{col}(X_r)\subseteq\operatorname{col}(X)$, se tiene $\hat r\perp\operatorname{col}(X)\ni\hat y-\hat y_r$. Entonces $y-\hat y_r=\hat r+(\hat y-\hat y_r)$, y Pitágoras da el resultado. $\blacksquare$</p></div>
+<div class="def"><span class="tag">Diseño ortogonal</span>
+<p>Si las columnas de $X$ son ortogonales, $X^\top X$ es diagonal y cada coeficiente se calcula por separado: $\hat\beta_j=\dfrac{x_j^\top y}{x_j^\top x_j}$. Quitar una columna no cambia los demás coeficientes, y el RSS sube exactamente $\hat\beta_j^2\|x_j\|^2$.</p></div>
+<p class="ej">Se aplica en: I·11, I·12, I·13, I·14, I·15.</p>
+</article>
+
+<!-- T8 -->
+<article class="ex th" id="t8"><h3><span class="n">T8</span> Descenso del gradiente</h3>
+<p>Cuando $p$ es grande, resolver las ecuaciones normales cuesta $O(np^2+p^3)$. El descenso del gradiente (GD) cuesta $O(np)$ por iteración y solo necesita productos matriz–vector.</p>
+<div class="def"><span class="tag">Algoritmo</span>
+<div class="m">$$\beta^{(k+1)}=\beta^{(k)}-\alpha\,\nabla J(\beta^{(k)})=\beta^{(k)}+\frac{\alpha}{n}X^\top r^{(k)},\qquad \alpha\gt0\ \text{(tasa de aprendizaje)}.$$</div>
+<p>Cada paso suma a $\beta$ una combinación de las columnas ponderada por los residuos actuales.</p></div>
+<div class="thm"><span class="tag">Teorema 13 · Recurrencia del error</span>
+<p>Con $d^{(k)}=\beta^{(k)}-\hat\beta$: $\;d^{(k+1)}=(I-\alpha H)\,d^{(k)}$, de donde $d^{(k)}=(I-\alpha H)^k\,d^{(0)}$.</p></div>
+<div class="proof"><span class="tag">Demostración</span><p>Como $X^\top y=X^\top X\hat\beta$, el gradiente queda $\nabla J(\beta)=\frac1nX^\top X(\beta-\hat\beta)=Hd$. Restando $\hat\beta$ a ambos lados de la actualización: $d^{(k+1)}=d^{(k)}-\alpha Hd^{(k)}$. $\blacksquare$</p></div>
+<div class="thm"><span class="tag">Teorema 14 · Condición de convergencia</span>
+<p>Sea $H\succ0$ con valores propios $\lambda_j$. GD converge a $\hat\beta$ desde <em>cualquier</em> punto inicial si y solo si</p>
+<div class="m">$$\rho(\alpha)=\max_j|1-\alpha\lambda_j|\lt1\iff 0\lt\alpha\lt\frac{2}{\lambda_{\max}}.$$</div></div>
+<div class="proof"><span class="tag">Demostración</span>
+<p>Con $H=Q\Lambda Q^\top$ y las coordenadas $\tilde d=Q^\top d$, la recurrencia se desacopla en $\tilde d_j^{(k)}=(1-\alpha\lambda_j)^k\,\tilde d_j^{(0)}$. Esto tiende a 0 para todo valor inicial si y solo si $|1-\alpha\lambda_j|\lt1$, es decir $0\lt\alpha\lambda_j\lt2$, para cada $j$. La condición más exigente es la del mayor $\lambda_j$. $\blacksquare$</p></div>
+<p><b>En el borde y más allá.</b> Con $\alpha=2/\lambda_{\max}$ el factor de esa dirección es $-1$: el error oscila sin decrecer. Con $\alpha\gt2/\lambda_{\max}$ crece y el método diverge. Por eso una tasa positiva no basta: controla la dirección del paso, no su tamaño.</p>
+<div class="thm"><span class="tag">Teorema 15 · Descenso monótono</span>
+<p>Si $0\lt\alpha\lt2/\lambda_{\max}$ y $g=\nabla J(\beta)\neq0$, entonces $J(\beta-\alpha g)\lt J(\beta)$.</p></div>
+<div class="proof"><span class="tag">Demostración</span>
+<p>Por el Taylor exacto, $J(\beta-\alpha g)=J(\beta)-\alpha\|g\|^2+\tfrac{\alpha^2}{2}g^\top Hg\le J(\beta)-\alpha\left(1-\tfrac{\alpha\lambda_{\max}}{2}\right)\|g\|^2$. El paréntesis es positivo. $\blacksquare$</p></div>
+<div class="thm"><span class="tag">Teorema 16 · Tasa óptima y número de condición</span>
+<div class="m">$$\alpha^*=\frac{2}{\lambda_{\min}+\lambda_{\max}},\qquad \rho^*=\frac{\kappa-1}{\kappa+1},\qquad \kappa=\frac{\lambda_{\max}}{\lambda_{\min}}.$$</div></div>
+<div class="proof"><span class="tag">Idea de la demostración</span><p>$\rho(\alpha)=\max\{|1-\alpha\lambda_{\min}|,|1-\alpha\lambda_{\max}|\}$. El primer término es el que manda con $\alpha$ pequeño y el segundo con $\alpha$ grande, así que el mínimo está donde se igualan: $1-\alpha\lambda_{\min}=\alpha\lambda_{\max}-1$. $\blacksquare$</p></div>
+<p><b>Lectura.</b> Si $\kappa$ es grande (valle alargado), $\rho^*\approx1$ y GD avanza lento. Si $\kappa=1$ (valle redondo), $\rho^*=0$ y basta un paso.</p>
+<div class="def"><span class="tag">Hessiana diagonal: fórmula cerrada</span>
+<div class="m">$$\beta_j^{(k)}=\hat\beta_j+(1-\alpha\lambda_j)^k\left(\beta_j^{(0)}-\hat\beta_j\right),\qquad k\gt\frac{\ln\!\big(|d_j^{(0)}|/\varepsilon\big)}{-\ln|1-\alpha\lambda_j|}\ \text{ para que }|d_j^{(k)}|\lt\varepsilon.$$</div>
+<p>El número de iteraciones lo decide la componente cuyo factor $|1-\alpha\lambda_j|$ está más cerca de 1.</p></div>
+<p><b>Newton y precondicionamiento.</b> El paso de Newton, $\beta-H^{-1}\nabla J$, llega al mínimo de una cuadrática en una iteración. Si se reescalan los predictores para que $H=I$, GD con $\alpha=1$ coincide con Newton. Estandarizar es una forma barata de acercarse a eso.</p>
+<p class="note">Si $H$ es solo semidefinida, las componentes en $\mathcal N(X)$ no cambian ($\lambda_j=0$, factor 1) y GD converge al minimizador más cercano al punto inicial dentro de esa familia.</p>
+<p class="ej">Se aplica en: I·8, I·9, I·10, I·11, I·15, II·11.</p>
+</article>
+
+<!-- T9 -->
+<article class="ex th" id="t9"><h3><span class="n">T9</span> Regresión polinomial</h3>
+<div class="def"><span class="tag">Lineal en los parámetros</span>
+<p>$y_i=\beta_0+\beta_1x_i+\dots+\beta_dx_i^d+\varepsilon_i$ no es lineal en $x$, pero sí en $\beta$. Es regresión lineal múltiple con las características $\phi(x)=(1,x,\dots,x^d)$ y matriz de diseño $\Phi_{ij}=x_i^{\,j}$ (Vandermonde). Todo lo anterior se aplica con $X=\Phi$.</p></div>
+<div class="thm"><span class="tag">Teorema 17 · Interpolación polinomial</span>
+<p>Si $n=d+1$, $\det\Phi=\prod_{i\lt j}(x_j-x_i)$. Con abscisas distintas, $\Phi$ es invertible y existe un único polinomio de grado $\le n-1$ que pasa por los $n$ puntos.</p></div>
+<p><b>Complejidad y sobreajuste.</b> Subir el grado anida modelos, así que por el Teorema 12 el error de entrenamiento nunca sube. Pero la varianza crece y aparecen oscilaciones entre los puntos y en los extremos (fenómeno de Runge). Un error de entrenamiento cero no indica un buen modelo.</p>
+<p><b>Mal condicionamiento.</b> Las columnas $1,x,x^2,\dots$ están muy correlacionadas, así que $\Phi^\top\Phi$ tiene un $\kappa$ enorme. La solución es usar <b>polinomios ortogonales</b>: transformar las potencias para que las columnas sean ortogonales en los puntos de muestreo. Generan las mismas funciones con una matriz diagonal. Ejemplo: en $x=(-1,0,1)$, $x^2$ no es ortogonal a $\mathbf 1$ ($\sum x_i^2=2$), pero $x^2-\tfrac23$ sí.</p>
+<p class="ej">Se aplica en: II·1, II·2, II·3, II·15.</p>
+</article>
+
+<!-- T10 -->
+<article class="ex th" id="t10"><h3><span class="n">T10</span> Estandarización</h3>
+<div class="def"><span class="tag">Definición</span>
+<div class="m">$$z_i=\frac{x_i-\bar x}{s_x},\qquad s_x=\sqrt{\tfrac{1}{n-1}\textstyle\sum(x_i-\bar x)^2}\ \ \text{(muestral)}\qquad\text{o}\qquad \sigma_x=\sqrt{\tfrac1n\textstyle\sum(x_i-\bar x)^2}\ \ \text{(poblacional)}.$$</div>
+<p>Deja la variable con media 0 y desviación 1. Con la desviación muestral $Z^\top Z=(n-1)R$; con la poblacional $Z^\top Z=nR$, donde $R$ es la matriz de correlaciones. Centrar es solo restar la media.</p></div>
+<div class="thm"><span class="tag">Prop. 7 · Invariancia ante cambios de unidad</span>
+<p>Si $x'=cx+b$ con $c\gt0$, entonces $z'=z$.</p></div>
+<div class="proof"><span class="tag">Demostración</span><p>$\bar x'=c\bar x+b$ y $s_{x'}=c\,s_x$, así que $z'_i=\dfrac{cx_i+b-c\bar x-b}{c\,s_x}=z_i$. $\blacksquare$</p></div>
+<div class="thm"><span class="tag">Prop. 8 · Intercepto con predictores centrados</span>
+<p>Si el intercepto no se penaliza, su valor óptimo cumple $\hat\beta_0=\bar y-\bar x^\top\hat\beta$. Con predictores centrados ($\bar x=0$), $\hat\beta_0=\bar y$: basta centrar $y$ y ajustar sin intercepto.</p></div>
+<div class="proof"><span class="tag">Demostración</span><p>$\partial_{\beta_0}\sum_i(y_i-\beta_0-x_i^\top\beta)^2=-2\sum_i(y_i-\beta_0-x_i^\top\beta)=0\Rightarrow\beta_0=\bar y-\bar x^\top\beta$. La penalización de Ridge no contiene $\beta_0$, así que vale igual con Ridge. $\blacksquare$</p></div>
+<div class="def"><span class="tag">Volver a unidades originales</span>
+<p>Si el modelo estandarizado tiene coeficientes $\hat\beta_j$:</p>
+<div class="m">$$b_j=\frac{\hat\beta_j}{s_j}\ \ (y\text{ solo centrada}),\qquad b_j=\frac{s_y\,\hat\beta_j}{s_j}\ \ (y\text{ estandarizada}),\qquad b_0=\bar y-\sum_jb_j\bar x_j.$$</div>
+<p>Se obtiene sustituyendo $z_j=(x_j-\bar x_j)/s_j$ en el modelo y agrupando términos.</p></div>
+<p><b>Por qué es obligatorio antes de Ridge.</b> Si una variable se multiplica por $c$, su coeficiente de mínimos cuadrados se divide por $c$ y su penalización $\lambda\beta_j^2$ se divide por $c^2$. Así, las variables con números grandes (metros en vez de km) quedan casi sin penalizar. Estandarizar pone a todas en la misma escala. Las medias y desviaciones se calculan solo con los datos de entrenamiento.</p>
+<p class="ej">Se aplica en: II·4, II·7, II·10, II·14.</p>
+</article>
+
+<!-- T11 -->
+<article class="ex th" id="t11"><h3><span class="n">T11</span> Regresión Ridge</h3>
+<div class="def"><span class="tag">Definición</span>
+<p>Con predictores estandarizados $Z$, respuesta centrada y $\lambda\ge0$:</p>
+<div class="m">$$J_\lambda(\beta)=\frac1{2n}\left(\|y-Z\beta\|^2+\lambda\|\beta\|^2\right).$$</div>
+<p>El intercepto no se penaliza (Prop. 8).</p></div>
+<div class="thm"><span class="tag">Teorema 18 · Derivadas y solución cerrada</span>
+<div class="m">$$\nabla J_\lambda=\frac1n\left[Z^\top(Z\beta-y)+\lambda\beta\right],\qquad \nabla^2J_\lambda=\frac1n\left(Z^\top Z+\lambda I\right),\qquad \hat\beta_\lambda=(Z^\top Z+\lambda I)^{-1}Z^\top y.$$</div></div>
+<div class="thm"><span class="tag">Teorema 19 · Existencia y unicidad para $\lambda\gt0$</span>
+<p>Aunque $Z$ no tenga rango completo, para $\lambda\gt0$ la matriz $Z^\top Z+\lambda I$ es definida positiva y $\hat\beta_\lambda$ es el único minimizador.</p></div>
+<div class="proof"><span class="tag">Demostración</span>
+<p>$v^\top(Z^\top Z+\lambda I)v=\|Zv\|^2+\lambda\|v\|^2\ge\lambda\|v\|^2\gt0$ para $v\neq0$. Entonces la Hessiana es definida positiva, la matriz es invertible (sus valores propios son $\mu_j+\lambda\ge\lambda$) y $J_\lambda$ es estrictamente convexa. Por el Taylor exacto, el punto crítico es el único mínimo global. $\blacksquare$</p></div>
+<div class="thm"><span class="tag">Teorema 20 · Ridge es mínimos cuadrados con datos ficticios</span>
+<div class="m">$$\|y-Z\beta\|^2+\lambda\|\beta\|^2=\left\|\begin{pmatrix}y\\0\end{pmatrix}-\begin{pmatrix}Z\\\sqrt\lambda\,I\end{pmatrix}\beta\right\|^2.$$</div>
+<p>Es decir, Ridge equivale a añadir $p$ observaciones ficticias con respuesta 0, que “tiran” de los coeficientes hacia cero.</p></div>
+<div class="proof"><span class="tag">Demostración</span><p>La norma de un vector apilado es la suma de las normas de sus bloques: $\|y-Z\beta\|^2+\|0-\sqrt\lambda\beta\|^2$. $\blacksquare$</p></div>
+<div class="thm"><span class="tag">Teorema 21 · Contracción en la base propia</span>
+<p>Sea $Z^\top Z=QMQ^\top$ con $M=\mathrm{diag}(\mu_j)$. Con $\alpha=Q^\top\beta$ y $c=Q^\top Z^\top y$:</p>
+<div class="m">$$\alpha^{\lambda}_j=\frac{c_j}{\mu_j+\lambda}=\underbrace{\frac{\mu_j}{\mu_j+\lambda}}_{\in(0,1)}\;\alpha^{\text{OLS}}_j.$$</div></div>
+<div class="proof"><span class="tag">Demostración</span><p>$(Z^\top Z+\lambda I)\beta=Z^\top y\iff Q(M+\lambda I)Q^\top\beta=Z^\top y\iff(M+\lambda I)\alpha=c$, que es un sistema diagonal. $\blacksquare$</p></div>
+<p><b>Lectura.</b> Las direcciones con poca variabilidad (μ pequeño) son las peor estimadas y Ridge las encoge más. Las direcciones bien informadas casi no se tocan.</p>
+<div class="def"><span class="tag">Casos y propiedades clave</span>
+<ul>
+<li>Si $Z^\top Z=cI$: $\;\hat\beta_\lambda=\dfrac{Z^\top y}{c+\lambda}=\dfrac{c}{c+\lambda}\hat\beta_{\text{OLS}}$. Es una contracción uniforme.</li>
+<li>$\|\hat\beta_\lambda\|^2=\sum_j c_j^2/(\mu_j+\lambda)^2$ es estrictamente decreciente en $\lambda$, y tiende a 0 cuando $\lambda\to\infty$.</li>
+<li>Cuando $\lambda\to0^+$, $\hat\beta_\lambda\to Z^+y$, la solución de mínimos cuadrados de norma mínima.</li>
+<li>Grados de libertad efectivos: $\mathrm{df}(\lambda)=\sum_j\frac{\mu_j}{\mu_j+\lambda}$. Con $\lambda=0$ es el número de coeficientes.</li>
+<li>Ningún coeficiente se anula exactamente con $\lambda$ finito, porque los factores son positivos. Lasso (penalización $\|\beta\|_1$) sí produce ceros.</li>
+</ul></div>
+<div class="def"><span class="tag">GD con Ridge (<i>weight decay</i>)</span>
+<div class="m">$$\beta^{(k+1)}=\Big(1-\frac{\alpha\lambda}{n}\Big)\beta^{(k)}-\frac{\alpha}{n}Z^\top(Z\beta^{(k)}-y),\qquad\text{converge}\iff0\lt\alpha\lt\frac{2n}{\mu_{\max}+\lambda}.$$</div>
+<p>En cada paso los coeficientes primero se encogen por un factor fijo y luego se corrigen por el error. Si $\beta^{(0)}=0$, el primer paso coincide con el de mínimos cuadrados.</p></div>
+<div class="def"><span class="tag">Forma restringida</span>
+<p>Ridge penalizado equivale a $\min\|y-Z\beta\|^2$ sujeto a $\|\beta\|_2\le t$ (condiciones KKT). Cada $t\lt\|\hat\beta_{\text{OLS}}\|$ corresponde a un único $\lambda\gt0$ con $\|\hat\beta_\lambda\|=t$, por la monotonía de la norma.</p></div>
+<p class="ej">Se aplica en: II·4 a II·15.</p>
+</article>
+
+<!-- T12 -->
+<article class="ex th" id="t12"><h3><span class="n">T12</span> Sesgo, varianza y generalización</h3>
+<p>Supuestos: $y=Z\beta+\varepsilon$, con $\mathbb E\varepsilon=0$, $\mathrm{Var}(\varepsilon)=\sigma^2I$ y $Z$ fija.</p>
+<div class="thm"><span class="tag">Teorema 22 · OLS es insesgado</span>
+<p>$\mathbb E\hat\beta_{\text{OLS}}=\beta$ y $\mathrm{Var}(\hat\beta_{\text{OLS}})=\sigma^2(Z^\top Z)^{-1}$. En la base propia, la varianza de cada componente es $\sigma^2/\mu_j$.</p></div>
+<div class="proof"><span class="tag">Demostración</span><p>$\hat\beta=(Z^\top Z)^{-1}Z^\top(Z\beta+\varepsilon)=\beta+(Z^\top Z)^{-1}Z^\top\varepsilon$. Su esperanza es $\beta$. Con $A=(Z^\top Z)^{-1}Z^\top$, la varianza es $A\,\sigma^2I\,A^\top=\sigma^2(Z^\top Z)^{-1}$. $\blacksquare$</p></div>
+<p><b>Consecuencia.</b> Con colinealidad, algún $\mu_j\approx0$ y la varianza se dispara: los coeficientes se vuelven inestables aunque el ajuste sea bueno.</p>
+<div class="thm"><span class="tag">Teorema 23 · Siempre existe un λ que mejora a OLS (caso $Z^\top Z=I$)</span>
+<p>Con $\hat\beta_\lambda=\hat\beta_{\text{OLS}}/(1+\lambda)$, el error cuadrático medio de estimación es</p>
+<div class="m">$$\mathbb E\|\hat\beta_\lambda-\beta\|^2=\underbrace{\frac{\lambda^2\|\beta\|^2}{(1+\lambda)^2}}_{\text{sesgo}^2}+\underbrace{\frac{p\,\sigma^2}{(1+\lambda)^2}}_{\text{varianza}},\qquad \lambda^*=\frac{p\,\sigma^2}{\|\beta\|^2}\gt0.$$</div></div>
+<div class="proof"><span class="tag">Demostración</span>
+<p>$\mathbb E\hat\beta_\lambda=\beta/(1+\lambda)$, así que el sesgo es $-\frac{\lambda}{1+\lambda}\beta$. La varianza es $\frac{\sigma^2}{(1+\lambda)^2}I$, con traza $\frac{p\sigma^2}{(1+\lambda)^2}$. Sea $f(\lambda)=\frac{\lambda^2B+S}{(1+\lambda)^2}$ con $B=\|\beta\|^2$ y $S=p\sigma^2$. Su derivada es $f'(\lambda)=\frac{2(\lambda B-S)}{(1+\lambda)^3}$, que vale $-2S\lt0$ en $\lambda=0$ y se anula en $\lambda^*=S/B$. Por tanto, algo de penalización siempre reduce el error frente a OLS. $\blacksquare$</p></div>
+<div class="def"><span class="tag">Descomposición del error de predicción</span>
+<div class="m">$$\mathbb E\big[(y_0-\hat y_0)^2\big]=\underbrace{\sigma^2}_{\text{irreducible}}+\underbrace{\big(\mathbb E\hat y_0-f(x_0)\big)^2}_{\text{sesgo}^2}+\underbrace{\mathrm{Var}(\hat y_0)}_{\text{varianza}}.$$</div>
+<p>Más complejidad (más predictores, mayor grado, menor $\lambda$) reduce el sesgo y aumenta la varianza. El error de entrenamiento siempre baja; el de prueba tiene forma de U. Por eso el grado o el $\lambda$ se eligen con <b>validación cruzada</b>, nunca con el RSS de entrenamiento.</p></div>
+<p class="ej">Se aplica en: I·14, II·3, II·5, II·8, II·13.</p>
+</article>
+
+<!-- FORMULARIO -->
+<article class="ex th formulario" id="formulario"><h3><span class="n">F</span> Formulario y consejos para el examen</h3>
+<p class="part-sub">Lo esencial para memorizar, agrupado por tema. Si sabes de dónde sale cada fórmula (T1–T12), no necesitas memorizar las demás.</p>
+
+<h4>1 · Costo y ajuste</h4>
+<div class="tbl"><table class="fm">
+<tr><td>Costo</td><td>$J=\frac{1}{2n}\|y-X\beta\|^2,\quad \mathrm{MSE}=\frac{\mathrm{RSS}}{n}=2J$</td></tr>
+<tr><td>Gradiente / Hessiana</td><td>$\nabla J=\frac1nX^\top(X\beta-y),\quad H=\frac1nX^\top X$</td></tr>
+<tr><td>Ecuaciones normales</td><td>$X^\top X\hat\beta=X^\top y,\quad \hat\beta=(X^\top X)^{-1}X^\top y$</td></tr>
+<tr><td>Verificación</td><td>$X^\top\hat r=0$ y $\sum\hat r_i=0$ (con intercepto)</td></tr>
+<tr><td>Exceso de costo</td><td>$J(\beta)-J(\hat\beta)=\frac1{2n}\|X(\beta-\hat\beta)\|^2$</td></tr>
+<tr><td>Regresión simple</td><td>$\hat\beta_1=\dfrac{\sum(x_i-\bar x)(y_i-\bar y)}{\sum(x_i-\bar x)^2},\quad \hat\beta_0=\bar y-\hat\beta_1\bar x$</td></tr>
+<tr><td>Diseño ortogonal</td><td>$\hat\beta_j=\dfrac{x_j^\top y}{x_j^\top x_j}$</td></tr>
+</table></div>
+
+<h4>2 · Unicidad y caso singular</h4>
+<div class="tbl"><table class="fm">
+<tr><td>Única solución</td><td>$\iff\operatorname{rango}X=p+1\iff H\succ0\iff\det X^\top X\neq0$</td></tr>
+<tr><td>Todas las soluciones</td><td>$\beta_p+\mathcal N(X)$, $\;\dim\mathcal N(X)=(p+1)-\operatorname{rango}X$</td></tr>
+<tr><td>$\hat y$ y $J_{\min}$</td><td>siempre únicos</td></tr>
+<tr><td>Predicción nueva única</td><td>$\iff x_0\perp\mathcal N(X)$</td></tr>
+<tr><td>Interpolar todo $y$</td><td>$\iff\operatorname{rango}X=n$</td></tr>
+</table></div>
+
+<h4>3 · Descenso del gradiente</h4>
+<div class="tbl"><table class="fm">
+<tr><td>Paso</td><td>$\beta^{(k+1)}=\beta^{(k)}+\frac{\alpha}{n}X^\top r^{(k)}$</td></tr>
+<tr><td>Error</td><td>$d^{(k)}=(I-\alpha H)^kd^{(0)}$; en cada dirección propia, factor $(1-\alpha\lambda_j)$</td></tr>
+<tr><td>Converge</td><td>$0\lt\alpha\lt 2/\lambda_{\max}$ (intervalo abierto; en el borde oscila)</td></tr>
+<tr><td>Tasa óptima</td><td>$\alpha^*=\frac{2}{\lambda_{\min}+\lambda_{\max}},\quad\rho^*=\frac{\kappa-1}{\kappa+1}$</td></tr>
+<tr><td>$H$ diagonal</td><td>$\beta_j^{(k)}=\hat\beta_j+(1-\alpha\lambda_j)^k(\beta_j^{(0)}-\hat\beta_j)$</td></tr>
+<tr><td>Iteraciones</td><td>$k\gt\ln(|d_j^{(0)}|/\varepsilon)\,/\,(-\ln|1-\alpha\lambda_j|)$, tomando la $j$ más lenta</td></tr>
+<tr><td>Un solo paso</td><td>si $H=I$ y $\alpha=1$ (Newton)</td></tr>
+</table></div>
+
+<h4>4 · Transformaciones</h4>
+<div class="tbl"><table class="fm">
+<tr><td>$y^*=ay+b$</td><td>$\hat\beta^*=a\hat\beta+b\,e_0,\quad\hat r^*=a\hat r,\quad\mathrm{RSS}^*=a^2\mathrm{RSS}$</td></tr>
+<tr><td>$Z=XD$</td><td>$\hat\theta=D^{-1}\hat\beta$; mismas predicciones y $J_{\min}$; $H_Z=D^\top H_XD$</td></tr>
+<tr><td>Replicar $q$ veces</td><td>$\mathrm{RSS}\times q$; $J$, gradiente, $H$ y solución iguales</td></tr>
+<tr><td>Anidados</td><td>$\mathrm{RSS}_{\text{red}}-\mathrm{RSS}_{\text{comp}}=\|\hat y-\hat y_{\text{red}}\|^2\ge0$</td></tr>
+</table></div>
+
+<h4>5 · Polinomial y estandarización</h4>
+<div class="tbl"><table class="fm">
+<tr><td>Vandermonde</td><td>$\Phi_{ij}=x_i^{\,j},\quad\det\Phi=\prod_{i\lt j}(x_j-x_i)$</td></tr>
+<tr><td>Estandarizar</td><td>$z=(x-\bar x)/s$; $s$: divide entre $n-1$; $\sigma$: entre $n$</td></tr>
+<tr><td>Intercepto</td><td>$\hat\beta_0=\bar y-\sum_jb_j\bar x_j$</td></tr>
+<tr><td>Des-estandarizar</td><td>$b_j=\hat\beta_j/s_j$ ($y$ centrada) o $b_j=s_y\hat\beta_j/s_j$ ($y$ estandarizada)</td></tr>
+</table></div>
+
+<h4>6 · Ridge</h4>
+<div class="tbl"><table class="fm">
+<tr><td>Solución</td><td>$\hat\beta_\lambda=(Z^\top Z+\lambda I)^{-1}Z^\top y$</td></tr>
+<tr><td>Costo</td><td>$J_\lambda=\frac1{2n}\big(\mathrm{RSS}+\lambda\|\beta\|^2\big)$</td></tr>
+<tr><td>$Z^\top Z=cI$</td><td>$\hat\beta_\lambda=Z^\top y/(c+\lambda)=\frac{c}{c+\lambda}\hat\beta_{\text{OLS}}$</td></tr>
+<tr><td>Factor de contracción</td><td>$\mu_j/(\mu_j+\lambda)$ en la dirección propia $j$</td></tr>
+<tr><td>Grados de libertad</td><td>$\mathrm{df}(\lambda)=\sum_j\mu_j/(\mu_j+\lambda)$</td></tr>
+<tr><td>GD Ridge</td><td>$\beta\leftarrow(1-\tfrac{\alpha\lambda}{n})\beta-\tfrac{\alpha}{n}Z^\top(Z\beta-y)$; converge si $\alpha\lt\frac{2n}{\mu_{\max}+\lambda}$</td></tr>
+<tr><td>Varianza OLS</td><td>$\sigma^2(Z^\top Z)^{-1}$; Ridge óptimo (caso ortonormal) $\lambda^*=p\sigma^2/\|\beta\|^2$</td></tr>
+</table></div>
+
+<h4>7 · Álgebra rápida</h4>
+<div class="tbl"><table class="fm">
+<tr><td>Inversa $2\times2$</td><td>$\begin{pmatrix}a&amp;b\\c&amp;d\end{pmatrix}^{-1}=\dfrac{1}{ad-bc}\begin{pmatrix}d&amp;-b\\-c&amp;a\end{pmatrix}$</td></tr>
+<tr><td>Valores propios $2\times2$</td><td>$\lambda^2-(\operatorname{tr}A)\lambda+\det A=0$</td></tr>
+<tr><td>Diagonal o triangular</td><td>valores propios = diagonal; $\det$ = producto de la diagonal</td></tr>
+<tr><td>Sistema $3\times3$</td><td>elimina restando múltiplos de ecuaciones; no inviertas</td></tr>
+</table></div>
+
+<h4>Consejos para el examen</h4>
+<ol class="tips">
+<li><b>Mira primero si las columnas son ortogonales</b> (sumas de productos cruzados iguales a 0). Si lo son, $X^\top X$ es diagonal y todo se reduce a divisiones.</li>
+<li><b>Arma $X$ con la columna de unos</b> y cuenta bien $n$: $J$ divide entre $2n$, el MSE entre $n$ y el gradiente lleva $\frac1n$.</li>
+<li><b>Verifica cada ajuste con $X^\top\hat r=0$.</b> Si no da cero, hay un error de cálculo.</li>
+<li><b>Para comparar candidatos</b> usa $J(\beta)-J(\hat\beta)=\|Xd\|^2/(2n)$; es más rápido y sirve de verificación.</li>
+<li><b>Caso singular:</b> encuentra $c$ con $Xc=0$ (la relación entre columnas) y escribe la solución como $\beta_p+t\,c$.</li>
+<li><b>En GD, calcula primero los valores propios de $H$.</b> El intervalo $0\lt\alpha\lt2/\lambda_{\max}$ es abierto: en el borde el método oscila.</li>
+<li><b>Al contar iteraciones,</b> la dirección más lenta manda. Usa logaritmos y comprueba $k$ y $k-1$ numéricamente.</li>
+<li><b>Flujo de Ridge:</b> estandarizar (lee si piden desviación muestral o poblacional), centrar $y$, no penalizar el intercepto, resolver y volver a las unidades originales.</li>
+<li><b>Si $Z^\top Z=cI$, no inviertas nada:</b> $\hat\beta_\lambda=Z^\top y/(c+\lambda)$.</li>
+<li><b>$\lambda$ tiene dos significados:</b> valor propio (Parte I) y penalización de Ridge (Parte II).</li>
+<li><b>Trabaja con fracciones exactas</b> y pasa a decimales solo al final.</li>
+<li><b>Errores frecuentes:</b> olvidar el $\frac1n$ del gradiente; confundir $s$ con $\sigma$; penalizar el intercepto; olvidar $s_y$ al des-estandarizar; equivocar el signo del paso (se resta el gradiente).</li>
+</ol>
+
+<h4>Demostraciones que conviene saber hacer</h4>
+<ul class="tips">
+<li>Gradiente de $J$ y ecuaciones normales (T2–T3).</li>
+<li>$H\succeq0$, y $H\succ0\iff$ rango completo $\Rightarrow$ solución única (T4).</li>
+<li>$X^\top\hat r=0$ y la identidad de Pitágoras (T5).</li>
+<li>Agregar predictores nunca aumenta el costo mínimo (T7).</li>
+<li>Convergencia de GD: $0\lt\alpha\lt2/\lambda_{\max}$ (T8).</li>
+<li>Invariancia de la estandarización (T10).</li>
+<li>Gradiente, Hessiana, solución cerrada y unicidad de Ridge para $\lambda\gt0$ (T11).</li>
+</ul>
+</article>
+</section>
 
 <!-- ======================= PARTE I ======================= -->
 <section class="part" id="parte1">
