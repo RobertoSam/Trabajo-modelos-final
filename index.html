@@ -63,6 +63,13 @@ h4{font-size:15px;font-weight:600;margin:16px 0 4px;color:var(--accent)}
 .lbl{display:block;font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;color:var(--muted);margin-bottom:4px}
 .teo .lbl{color:var(--accent)}
 .sol-lbl{font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;color:var(--res-ink);border-top:1px solid var(--line);padding-top:10px;margin-top:4px}
+.gl td{white-space:normal;text-align:left;vertical-align:top;min-width:90px}
+.gl td:first-child{white-space:nowrap}
+.gl-h{font-family:var(--f-display);font-weight:600;font-size:21px;margin:26px 0 4px}
+.gl-dl{display:grid;grid-template-columns:minmax(150px,220px) 1fr;gap:8px 18px;margin:10px 0}
+.gl-dl dt{font-weight:600}
+.gl-dl dd{margin:0;min-width:0}
+@media (max-width:560px){.gl-dl{grid-template-columns:1fr;gap:2px}.gl-dl dd{margin-bottom:10px}}
 p{margin:6px 0}
 .m{overflow-x:auto;overflow-y:hidden;max-width:100%}
 mjx-container[display="true"]{overflow-x:auto;overflow-y:hidden;max-width:100%;padding:2px 0}
@@ -81,7 +88,7 @@ html{scroll-behavior:smooth}
 <div class="wrap">
 <header>
   <h1>Solucionario: regresión lineal múltiple, polinomial y Ridge</h1>
-  <p>Modelos de Aprendizaje Automático · MMC–IMCA. Cada ejercicio incluye su enunciado, la base teórica que lo sustenta y la solución paso a paso. Cubre las dos listas: <em>Regresión lineal múltiple</em> (15 ejercicios) y <em>Regresión polinomial y regresión Ridge</em> (15 ejercicios). Todas las cifras fueron verificadas con aritmética racional exacta.</p>
+  <p>Modelos de Aprendizaje Automático · MMC–IMCA. Cada ejercicio incluye su enunciado, la base teórica que lo sustenta y la solución paso a paso. Al final hay un glosario de siglas, símbolos y conceptos. Cubre las dos listas: <em>Regresión lineal múltiple</em> (15 ejercicios) y <em>Regresión polinomial y regresión Ridge</em> (15 ejercicios). Todas las cifras fueron verificadas con aritmética racional exacta.</p>
   <div class="conv">
     <strong>Convenciones usadas en todo el documento.</strong>
     $\;J(\beta)=\frac{1}{2n}\|y-X\beta\|_2^2$, $\;\mathrm{RSS}=\|r\|^2$, $\;\mathrm{MSE}=\frac1n\|r\|^2=2J$,
@@ -103,6 +110,7 @@ html{scroll-behavior:smooth}
       <li><a href="#b6">6</a></li><li><a href="#b7">7</a></li><li><a href="#b8">8</a></li><li><a href="#b9">9</a></li><li><a href="#b10">10</a></li>
       <li><a href="#b11">11</a></li><li><a href="#b12">12</a></li><li><a href="#b13">13</a></li><li><a href="#b14">14</a></li><li><a href="#b15">15</a></li>
     </ul></div>
+<div><h2>Consulta</h2><ul><li><a href="#glosario" style="min-width:auto">Glosario</a></li></ul></div>
 </nav>
 
 <!-- ======================= PARTE I ======================= -->
@@ -676,6 +684,114 @@ $$\hat\beta_4=\frac{(16,-4)}{4+4}=(2,\,-0.5)\;\Rightarrow\;b_1=\tfrac21=2,\;b_2=
 <div class="res">$\lambda_{\min}=2$, $\hat\beta_2=(-\tfrac12,\tfrac{\sqrt3}2)$ (norma 1), predicción en $x=2$: $8\cdot\tfrac24=4$.</div>
 <p class="note">Esto ilustra la equivalencia entre Ridge penalizado y Ridge con restricción $\|\beta\|_2\le t$: cada $t$ corresponde a un $\lambda$.</p>
 </article>
+</section>
+
+
+<section class="part" id="glosario">
+<h2>Glosario</h2>
+<p class="part-sub">Siglas, símbolos y conceptos que aparecen en los enunciados y las soluciones. La columna de la derecha indica en qué ejercicios se usan.</p>
+
+<h3 class="gl-h">Siglas</h3>
+<div class="tbl"><table class="gl">
+<tr><th>Sigla</th><th>Significado</th><th>Qué es, en una línea</th><th>Dónde</th></tr>
+<tr><td><b>MMC–IMCA</b></td><td>Maestría en Modelización Matemática y Computacional – Instituto de Matemática y Ciencias Afines (UNI)</td><td>El programa y la institución del curso.</td><td>Encabezado</td></tr>
+<tr><td><b>OLS</b></td><td><i>Ordinary Least Squares</i></td><td>Mínimos cuadrados ordinarios: el ajuste sin penalización, $\hat\beta=(X^\top X)^{-1}X^\top y$.</td><td>II·5–II·15</td></tr>
+<tr><td><b>MCO</b></td><td>Mínimos Cuadrados Ordinarios</td><td>Lo mismo que OLS, en español.</td><td>II·4, II·10</td></tr>
+<tr><td><b>RSS</b></td><td><i>Residual Sum of Squares</i></td><td>Suma de cuadrados residual: $\sum_i r_i^2=\|y-\hat y\|^2$.</td><td>I·1, I·5, I·12–15, II·8</td></tr>
+<tr><td><b>MSE</b></td><td><i>Mean Squared Error</i></td><td>Error cuadrático medio: $\mathrm{RSS}/n$. Equivale a $2J$.</td><td>I·1, I·12, I·13, I·15</td></tr>
+<tr><td><b>ECM</b></td><td>Error Cuadrático Medio</td><td>Lo mismo que MSE, en español.</td><td>II·2</td></tr>
+<tr><td><b>GD</b></td><td><i>Gradient Descent</i></td><td>Descenso del gradiente: $\beta^{(k+1)}=\beta^{(k)}-\alpha\nabla J(\beta^{(k)})$.</td><td>I·8–I·11, I·15, II·11</td></tr>
+<tr><td><b>CV</b></td><td><i>Cross-Validation</i></td><td>Validación cruzada: medir el error en datos que no se usaron para ajustar; sirve para elegir $\lambda$ o el número de predictores.</td><td>I·14, II·8</td></tr>
+<tr><td><b>AIC / BIC</b></td><td>Criterios de información de Akaike / Bayesiano</td><td>Penalizan el ajuste por el número de parámetros para comparar modelos de distinto tamaño.</td><td>I·14</td></tr>
+<tr><td><b>KKT</b></td><td>Condiciones de Karush–Kuhn–Tucker</td><td>Condiciones de optimalidad con restricciones; conectan Ridge penalizado con Ridge restringido ($\|\beta\|\le t$).</td><td>II·15</td></tr>
+<tr><td><b>df</b></td><td><i>degrees of freedom</i></td><td>Grados de libertad efectivos de Ridge: $\sum_j\mu_j/(\mu_j+\lambda)$; con $\lambda=0$ es el número de coeficientes.</td><td>II·13</td></tr>
+<tr><td><b>Ridge</b></td><td>“Cresta” (no es sigla)</td><td>Regresión con penalización $\lambda\|\beta\|_2^2$. También se llama regularización L2 o de Tikhonov.</td><td>Parte II</td></tr>
+<tr><td><b>Lasso</b></td><td><i>Least Absolute Shrinkage and Selection Operator</i></td><td>Regresión con penalización $\lambda\|\beta\|_1$; a diferencia de Ridge, puede dejar coeficientes exactamente en cero.</td><td>II·5</td></tr>
+<tr><td><b>SymPy</b></td><td>Librería de Python</td><td>Cálculo simbólico; se usó para verificar todas las cifras con fracciones exactas.</td><td>Pie de página</td></tr>
+</table></div>
+
+<h3 class="gl-h">Símbolos</h3>
+<div class="tbl"><table class="gl">
+<tr><th>Símbolo</th><th>Nombre</th><th>Significado</th></tr>
+<tr><td>$n$, $p$</td><td>tamaños</td><td>$n$ = número de observaciones (filas); $p$ = número de predictores. Con intercepto hay $p+1$ coeficientes.</td></tr>
+<tr><td>$X$</td><td>matriz de diseño</td><td>Una fila por observación; primera columna de unos (intercepto) y luego los predictores.</td></tr>
+<tr><td>$\Phi$</td><td>matriz de diseño polinomial</td><td>Como $X$, pero con columnas $1,x,x^2,\dots$ (Parte II).</td></tr>
+<tr><td>$Z$</td><td>predictores estandarizados</td><td>Matriz de diseño con columnas centradas y escaladas; sin columna de unos salvo en I·11.</td></tr>
+<tr><td>$y$, $\hat y$</td><td>respuesta y predicción</td><td>$y$ son los valores observados; $\hat y=X\hat\beta$ los ajustados.</td></tr>
+<tr><td>$\beta$, $\hat\beta$</td><td>coeficientes</td><td>$\beta$ es cualquier vector candidato; $\hat\beta$ (con “gorro”) es el óptimo estimado.</td></tr>
+<tr><td>$\beta_0$</td><td>intercepto</td><td>Valor predicho cuando todos los predictores valen 0.</td></tr>
+<tr><td>$\hat\beta_\lambda$</td><td>coeficientes Ridge</td><td>Solución de Ridge para un valor dado de $\lambda$.</td></tr>
+<tr><td>$\gamma$, $\theta$</td><td>coeficientes alternativos</td><td>Solo cambian de nombre para distinguir otro modelo: $\gamma$ el reducido (I·14) o el estandarizado (II·4); $\theta$ el reescalado (I·11).</td></tr>
+<tr><td>$r$, $e$, $\varepsilon$</td><td>residuo / error</td><td>$r=e=y-\hat y$ es el residuo calculado; $\varepsilon$ es el error teórico (no observable) del modelo.</td></tr>
+<tr><td>$d$</td><td>error de los coeficientes</td><td>$d=\beta-\hat\beta$: distancia del candidato al óptimo.</td></tr>
+<tr><td>$J(\beta)$</td><td>función de costo</td><td>$\frac1{2n}\|y-X\beta\|^2$, lo que se minimiza.</td></tr>
+<tr><td>$J_\lambda(\beta)$</td><td>costo Ridge</td><td>$\frac1{2n}(\|y-Z\beta\|^2+\lambda\|\beta\|^2)$.</td></tr>
+<tr><td>$\nabla J$</td><td>gradiente (“nabla”)</td><td>Vector de derivadas parciales; apunta hacia donde $J$ crece más rápido.</td></tr>
+<tr><td>$H=\nabla^2J$</td><td>Hessiana</td><td>Matriz de segundas derivadas; mide la curvatura. En regresión, $H=X^\top X/n$.</td></tr>
+<tr><td>$\alpha$</td><td>tasa de aprendizaje</td><td>Tamaño del paso en el descenso del gradiente.</td></tr>
+<tr><td>$\lambda$</td><td><b>dos usos</b></td><td>(1) en la Parte I, $\lambda_j$ son los <b>valores propios</b> de $H$; (2) en la Parte II, $\lambda$ es el <b>parámetro de penalización</b> de Ridge. Fíjate en el contexto.</td></tr>
+<tr><td>$\mu_j$</td><td>valores propios de $Z^\top Z$</td><td>Se usa $\mu$ en la Parte II justamente para no confundirlos con el $\lambda$ de Ridge.</td></tr>
+<tr><td>$\lambda_{\max}$, $\lambda_{\min}$</td><td>valor propio máximo / mínimo</td><td>La curvatura más fuerte y la más débil del costo.</td></tr>
+<tr><td>$\kappa$</td><td>número de condición</td><td>$\lambda_{\max}/\lambda_{\min}$; cuanto más grande, más lento y difícil el descenso del gradiente.</td></tr>
+<tr><td>$\rho$</td><td>radio espectral</td><td>$\max_j|1-\alpha\lambda_j|$; factor por el que se reduce el error en cada paso. Converge si $\rho\lt1$.</td></tr>
+<tr><td>$X^\top$</td><td>transpuesta</td><td>Intercambia filas por columnas.</td></tr>
+<tr><td>$X^\top X$</td><td>matriz de Gram</td><td>Productos internos entre columnas; si es diagonal, las columnas son ortogonales.</td></tr>
+<tr><td>$(\cdot)^{-1}$</td><td>inversa</td><td>Existe solo si la matriz no es singular ($\det\neq0$).</td></tr>
+<tr><td>$Z^+$</td><td>pseudoinversa de Moore–Penrose</td><td>Generaliza la inversa; $Z^+y$ es la solución de mínimos cuadrados de norma mínima.</td></tr>
+<tr><td>$I$, $I_3$</td><td>matriz identidad</td><td>Unos en la diagonal, ceros fuera; el subíndice indica el tamaño.</td></tr>
+<tr><td>$\mathrm{diag}(a,b,c)$</td><td>matriz diagonal</td><td>Matriz con $a,b,c$ en la diagonal y ceros fuera.</td></tr>
+<tr><td>$\det$</td><td>determinante</td><td>Si es 0, la matriz es singular (no invertible).</td></tr>
+<tr><td>$Q$</td><td>matriz ortogonal</td><td>Sus columnas son los vectores propios; cumple $Q^\top Q=I$.</td></tr>
+<tr><td>$\mathbf 1$, $e_0$</td><td>vector de unos / vector canónico</td><td>$\mathbf 1=(1,\dots,1)^\top$; $e_0=(1,0,\dots,0)^\top$ selecciona el intercepto.</td></tr>
+<tr><td>$P$</td><td>matriz sombrero (<i>hat matrix</i>)</td><td>$P=X(X^\top X)^{-1}X^\top$; “le pone el gorro” a $y$: $\hat y=Py$.</td></tr>
+<tr><td>$\operatorname{col}(X)$</td><td>espacio columna</td><td>Todos los vectores $X\beta$ posibles: lo que el modelo puede predecir.</td></tr>
+<tr><td>$\mathcal N(X)$</td><td>núcleo o espacio nulo</td><td>Vectores $c$ con $Xc=0$: cambios en $\beta$ que no alteran las predicciones.</td></tr>
+<tr><td>$\operatorname{rango}X$</td><td>rango</td><td>Número de columnas (o filas) linealmente independientes.</td></tr>
+<tr><td>$\|v\|$, $\|v\|_2$</td><td>norma euclidiana</td><td>Longitud del vector: $\sqrt{\sum v_j^2}$. $\|v\|^2=v^\top v$.</td></tr>
+<tr><td>$\|v\|_1$</td><td>norma 1</td><td>$\sum_j|v_j|$ (la de Lasso).</td></tr>
+<tr><td>$\|v\|_\infty$</td><td>norma infinito</td><td>$\max_j|v_j|$: la componente más grande en valor absoluto.</td></tr>
+<tr><td>$\bar x$</td><td>media</td><td>Promedio de la variable.</td></tr>
+<tr><td>$s_x$</td><td>desviación estándar muestral</td><td>Divide por $n-1$.</td></tr>
+<tr><td>$\sigma_x$</td><td>desviación estándar poblacional</td><td>Divide por $n$ (II·14).</td></tr>
+<tr><td>$\sigma^2$</td><td>varianza del ruido</td><td>Varianza de $\varepsilon$; parte del error que ningún modelo puede eliminar.</td></tr>
+<tr><td>$R$</td><td>matriz de correlaciones</td><td>Correlaciones entre predictores; con datos estandarizados, $Z^\top Z=(n-1)R$.</td></tr>
+<tr><td>$\succ0$, $\succeq0$</td><td>definida / semidefinida positiva</td><td>$H\succ0$: todos los valores propios $\gt0$; $H\succeq0$: todos $\ge0$.</td></tr>
+<tr><td>$\perp$</td><td>ortogonal</td><td>Producto interno cero (vectores “perpendiculares”).</td></tr>
+<tr><td>$\iff$, $\Rightarrow$</td><td>si y solo si / implica</td><td>Equivalencia lógica / consecuencia.</td></tr>
+<tr><td>$\blacksquare$</td><td>fin de demostración</td><td>Marca que la prueba terminó.</td></tr>
+</table></div>
+
+<h3 class="gl-h">Conceptos</h3>
+<dl class="gl-dl">
+<dt>Intercepto</dt><dd>Término constante $\beta_0$; se incorpora con la columna de unos de $X$.</dd>
+<dt>Residuo</dt><dd>Diferencia entre lo observado y lo predicho, $y_i-\hat y_i$.</dd>
+<dt>Ecuaciones normales</dt><dd>$X^\top X\beta=X^\top y$. Se obtienen igualando el gradiente a cero; su solución es el ajuste de mínimos cuadrados.</dd>
+<dt>Proyección ortogonal</dt><dd>$\hat y$ es el punto de $\operatorname{col}(X)$ más cercano a $y$; por eso el residuo es perpendicular a todas las columnas ($X^\top r=0$).</dd>
+<dt>Valores y vectores propios</dt><dd>$Hv=\lambda v$: direcciones que la matriz solo estira (por $\lambda$) sin girar. También se llaman autovalores/autovectores o eigenvalores.</dd>
+<dt>Definida positiva</dt><dd>Matriz simétrica con todos sus valores propios positivos; en $H$, garantiza un único mínimo.</dd>
+<dt>Convexidad estricta</dt><dd>La función tiene forma de “taza” sin partes planas; tiene a lo sumo un mínimo.</dd>
+<dt>Singular</dt><dd>Matriz no invertible ($\det=0$, algún valor propio igual a 0).</dd>
+<dt>Colinealidad</dt><dd>Un predictor es combinación lineal de otros; vuelve singular $X^\top X$ y hace que $\hat\beta$ no sea único (I·6, II·9).</dd>
+<dt>Columnas ortogonales</dt><dd>Predictores con producto interno cero; $X^\top X$ queda diagonal y cada coeficiente se calcula por separado (conjunto A, I·15).</dd>
+<dt>Tasa de aprendizaje</dt><dd>Tamaño del paso $\alpha$; si es muy grande el método oscila o diverge, si es muy pequeña avanza lento.</dd>
+<dt>Convergencia</dt><dd>Que las iteraciones se acerquen al óptimo. Lineal: el error se multiplica por un factor fijo $\rho\lt1$ en cada paso.</dd>
+<dt>Número de condición</dt><dd>Mide qué tan “alargado” es el valle del costo; con $\kappa=1$ es perfectamente redondo.</dd>
+<dt>Método de Newton</dt><dd>Paso $\beta-H^{-1}\nabla J$; en una cuadrática llega al mínimo en un solo paso (I·11).</dd>
+<dt>Estandarizar</dt><dd>Restar la media y dividir por la desviación estándar; deja media 0 y varianza 1.</dd>
+<dt>Centrar</dt><dd>Solo restar la media (II·10, II·14).</dd>
+<dt>Regularización / penalización</dt><dd>Añadir al costo un término que castiga coeficientes grandes, para estabilizar el ajuste.</dd>
+<dt>Contracción (<i>shrinkage</i>)</dt><dd>Efecto de Ridge: acerca los coeficientes a 0. El factor de contracción es $\mu_j/(\mu_j+\lambda)$.</dd>
+<dt><i>Weight decay</i></dt><dd>“Decaimiento de pesos”: en el descenso del gradiente con Ridge, los coeficientes se multiplican por $1-\alpha\lambda/n$ en cada paso (II·11).</dd>
+<dt>Sesgo–varianza</dt><dd>Error esperado = sesgo² + varianza + ruido. Ridge acepta algo de sesgo para reducir varianza.</dd>
+<dt>Sobreajuste</dt><dd>El modelo memoriza el ruido de entrenamiento y predice peor en datos nuevos.</dd>
+<dt>Modelos anidados</dt><dd>Uno es caso particular del otro (fijando coeficientes en 0), como el reducido y el completo de I·14.</dd>
+<dt>Matriz de Vandermonde</dt><dd>Matriz de diseño polinomial, con columnas $1,x,x^2,\dots$ (II·1, II·3).</dd>
+<dt>Fenómeno de Runge</dt><dd>Oscilaciones grandes de polinomios de grado alto cerca de los extremos del intervalo.</dd>
+<dt>Polinomios ortogonales</dt><dd>Versión de $1,x,x^2,\dots$ transformada para que sus columnas sean ortogonales (II·15).</dd>
+<dt>Componentes principales</dt><dd>Las direcciones propias de $Z^\top Z$: ejes de mayor a menor variabilidad de los predictores (II·13).</dd>
+<dt>Equivariante / invariante a escala</dt><dd>OLS es equivariante (si cambias la unidad, el coeficiente se ajusta y las predicciones no cambian); Ridge sin estandarizar no lo es.</dd>
+<dt>Interpolar</dt><dd>Ajustar exactamente todos los puntos (residuo cero).</dd>
+</dl>
 </section>
 
 <footer>Verificación: cada resultado numérico se recalculó con aritmética racional exacta (SymPy) antes de redactarlo.</footer>
